@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "Leader-team-AI-bot"
+name = "LeaderTeamAIbot"
 version = "0.1.0"
-description = ""
+description = "Leader Team AI bot"
 authors = ["ms <ff9147782@gmail.com> <https://github.com/MalakhovStas>"]
 repository = "https://github.com/MalakhovStas/LeaderTeamAIbot.git"
 readme = "README.md"
