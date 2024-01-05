@@ -3,7 +3,7 @@ name = "Leader-team-AI-bot"
 version = "0.1.0"
 description = ""
 authors = ["ms <ff9147782@gmail.com> <https://github.com/MalakhovStas>"]
-repository = ""
+repository = "https://github.com/MalakhovStas/LeaderTeamAIbot.git"
 readme = "README.md"
 
 [tool.poetry.dependencies]
