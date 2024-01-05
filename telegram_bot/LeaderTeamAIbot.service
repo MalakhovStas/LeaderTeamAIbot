@@ -1,0 +1,17 @@
+# Для автоматического запуска бота при перезагрузке сервера копия этого файла
+# должна лежать в папке /etc/systemd/system/
+# команда для копирования файла в нужную категорию cp LeaderTeamAIbot.service /etc/systemd/system/
+# systemctl enable LeaderTeamAIbot - это команда в регистрации автозапуска бота при рестарте
+# service LeaderTeamAIbot start - запуск бота / stop
+
+[Unit]
+Description=Leader-Team-AI-bot
+[Service]
+WorkingDirectory=/var/LeaderTeamAIbot
+User=root
+ExecStart=/var/LeaderTeamAIbot/venv/bin/python manage.py start_tg_bot
+Restart=on-failure
+RestartSec=5s
+[Install]
+WantedBy=multi-user.target
+EOF

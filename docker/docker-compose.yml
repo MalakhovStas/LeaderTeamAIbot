@@ -1,0 +1,26 @@
+version: "3"
+name: leader_team_ai_bot
+
+services:
+  redis:
+    container_name: cache_leader_team_ai_bot
+    image: redis
+    restart: always
+    ports:
+      - '6666:6379'
+    command: redis-server --loglevel debug
+
+  postgres:
+    container_name: postgres_leader_team_ai_bot
+    image: postgres
+    ports:
+      - '4444:5432'
+    environment:
+      POSTGRES_DB: "LeaderTeamAIbot"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "secret"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d LeaderTeamAIbot -p 4444"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,50 @@
+stages:
+  - code quality
+  - testing
+  - types
+
+flake8:
+  tags:
+    - DjangoAiogramTgBot
+
+  stage: code quality
+  when: always
+  before_script:
+    - cp -r /home/gitlab-runner/.env.local.local .
+    - poetry config virtualenvs.in-project true
+    - poetry install
+    - source $(poetry env info --path)/bin/activate
+  script:
+    - flake8
+
+test:
+  tags:
+    - DjangoAiogramTgBot
+
+  stage: testing
+  when: always
+  before_script:
+    - cp -r /home/gitlab-runner/.env.local.local .
+    - poetry config virtualenvs.in-project true
+    - poetry install
+    - source $(poetry env info --path)/bin/activate
+    - docker/up.sh
+    - sleep 30
+  script:
+    - pytest src/tests
+  after_script:
+    - docker/down.sh
+
+mypy:
+  tags:
+    - DjangoAiogramTgBot
+
+  stage: types
+  when: always
+  before_script:
+    - cp -r /home/gitlab-runner/.env.local.local .
+    - poetry config virtualenvs.in-project true
+    - poetry install
+    - source $(poetry env info --path)/bin/activate
+  script:
+    - mypy .
