@@ -164,4 +164,3 @@ logs
 
 *.xlsx
 *.xls
-docker/docker-compose.yml
