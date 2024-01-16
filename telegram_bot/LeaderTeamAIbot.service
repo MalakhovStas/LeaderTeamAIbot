@@ -7,9 +7,9 @@
 [Unit]
 Description=Leader-Team-AI-bot
 [Service]
-WorkingDirectory=/var/LeaderTeamAIbot
+WorkingDirectory=/home/LeaderTeamAIbot
 User=root
-ExecStart=/var/LeaderTeamAIbot/venv/bin/python manage.py start_tg_bot
+ExecStart=/home/LeaderTeamAIbot/venv/bin/python manage.py start_tg_bot
 Restart=on-failure
 RestartSec=5s
 [Install]
