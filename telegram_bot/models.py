@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth import get_user_model
+from .config import DEFAULT_FREE_BALANCE_REQUEST_USER
 
 
 class TelegramAccount(models.Model):
@@ -60,7 +61,11 @@ class TelegramAccount(models.Model):
         null=False, blank=True, default=False, verbose_name=_('ban from user'))
 
     balance_requests = models.IntegerField(
-        null=False, blank=True, default=50, verbose_name=_('balance requests'))
+        null=False,
+        blank=True,
+        default=DEFAULT_FREE_BALANCE_REQUEST_USER,
+        verbose_name=_('balance requests')
+    )
 
     balance = models.DecimalField(max_digits=10, decimal_places=2, null=False,
                                   blank=True, default=0, verbose_name=_('balance'))

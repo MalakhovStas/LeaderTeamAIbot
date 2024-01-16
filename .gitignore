@@ -161,3 +161,6 @@ dev
 !**/migrations
 !**/migrations/__init__.py
 logs
+
+*.xlsx
+*.xls

@@ -56,26 +56,32 @@ class AdminsManager:
             return None, None, None
 
         text, next_state, type_result = None, None, None
+        text = (
+            '<b>Команды администратора:</b>\n'
+            '<b>/commands</b> - список команд\n'
+            '<b>/my_id</b> - мой id\n'
+            '<b>/how_users</b> - кол-во пользователей в базе\n'
+            '<b>/stat</b> - статистика по пользователям\n'
+            '<b>/users_info</b> - выгрузка детальной информации о пользователях\n'
+            '<b>/mailing</b> - рассылка пользователям бота\n'
+            '<b>/mailing_admins</b> - рассылка администраторам бота\n'
+            '<b>/block_user</b> - заблокировать пользователя\n'
+            '<b>/unblock_user</b> - разблокировать пользователя\n'
+            '<b>/load_stat</b> - нагрузка на сервер\n'
+            # '<b>/change_user_requests_balance</b> - изменить баланс ответов пользователя\n'
+            # '<b>/unload_payment_data_user</b> - выгрузить данные по оплатам пользователя\n'
+            # '<b>/check_proxies</b> - проверить прокси\n'
+            # f'<b>/change_user_balance</b> - изменить баланс пользователя\n'
+            # '<b>/unloading_logs</b> - выгрузка логов'
+
+        )
+        if message.from_user.id in self.tech_admins:
+            text += (
+                '<b>/unloading_logs</b> - выгрузка логов\n'
+            )
 
         if command == '/commands':
-            text = (
-                '<b>Команды администратора:</b>\n'
-                '<b>/commands</b> - список команд\n'
-                '<b>/my_id</b> - мой id\n'
-                '<b>/how_users</b> - кол-во пользователей в базе\n'
-                '<b>/mailing_admins</b> - рассылка администраторам бота\n'
-                '<b>/mailing</b> - рассылка пользователям бота\n'
-                '<b>/stat</b> - статистика по пользователям\n'
-                '<b>/users_info</b> - выгрузка детальной информации о пользователях\n'
-                '<b>/block_user</b> - заблокировать пользователя\n'
-                '<b>/unblock_user</b> - разблокировать пользователя\n'
-                '<b>/change_user_requests_balance</b> - изменить баланс ответов пользователя\n'
-                '<b>/unload_payment_data_user</b> - выгрузить данные по оплатам пользователя\n'
-                '<b>/load_stat</b> - данные по нагрузке на сервер\n'
-                '<b>/check_proxies</b> - проверить прокси\n'
-                '<b>/unloading_logs</b> - выгрузка логов'
-                # f'<b>/change_user_balance</b> - изменить баланс пользователя\n'
-            )
+            pass
 
         elif command == '/my_id':
             text = f'Твой id: {message.from_user.id}'
@@ -117,7 +123,7 @@ class AdminsManager:
                 self.logger.debug(self.sign + f'OK -> send logs files -> user: '
                                               f'{message.from_user.id}, username: '
                                               f'{message.from_user.username}'
-            )
+                                  )
             text = '<b>Файлы с логами отправлены</b>'
 
         elif command == '/unload_payment_data_user':
@@ -146,7 +152,9 @@ class AdminsManager:
 
                 for day in range(datetime.now().date().day, 0, -1):
                     new_users_in_day = await self.dbase.count_users(
-                        date=datetime.now().date() - timedelta(days=day - 1))
+                        register=True,
+                        date=datetime.now().date() - timedelta(days=day - 1)
+                    )
                     new_users_in_month += new_users_in_day
                     line += f'\n{datetime.now().day - day + 1}  /  {new_users_in_day}'
 
@@ -170,26 +178,30 @@ class AdminsManager:
                 new_users_in_month = 0
                 for day in range(datetime.now().date().day, 0, -1):
                     new_users_in_day = await self.dbase.count_users(
-                        date=datetime.now().date()-timedelta(days=day - 1))
+                        register=True,
+                        date=datetime.now().date()-timedelta(days=day - 1)
+                    )
                     new_users_in_month += new_users_in_day
                     ws.append((f'{datetime.now().day - day + 1}  /  {new_users_in_day}',))
                 ws.append((f'Всего в этом месяце: {new_users_in_month}',))
                 ws.append(('',))
 
                 ws.append((
-                    'User_id', 'Name', 'Username', 'Дата регистрации', 'Дата последнего запроса',
-                    'Текст последнего запроса', 'Всего запросов', 'Бан от пользователя'
+                    'Telegram_id', 'Name', 'Username', 'Дата регистрации',
+                    'Дата последнего запроса', 'Текст последнего запроса',
+                    'Всего запросов', 'Бан от пользователя'
                 ))
                 for user in await self.dbase.select_all_contacts_users():
+                    username = user.get("tg_username")
                     ws.append((
-                        user.user_id,
-                        user.first_name,
-                        f'{f"@{user.username}" if user.username else ""}',
-                        user.date_join,
-                        user.date_last_request,
-                        user.text_last_request,
-                        user.num_requests,
-                        user.ban_from_user
+                        user.get("tg_user_id"),
+                        user.get("tg_first_name"),
+                        f'{f"@{username}" if username else ""}',
+                        str(user.get("added_date").strftime('%d.%m.%Y %H:%M:%S')),
+                        str(user.get("date_last_request").strftime('%d.%m.%Y %H:%M:%S')),
+                        user.get("text_last_request"),
+                        user.get("num_requests"),
+                        user.get("ban_from_user")
                     ))
                 wb.save('users_info.xlsx')
 
@@ -227,7 +239,7 @@ class AdminsManager:
         else:
             # рассылка по всем, нужна для обновления данных
             # id_users: tuple = self.dbase.get_all_users(id_only=True)
-            # о тем кто не забанил бота
+            # рассылка по тем кто не забанил бота
             id_users: tuple = await self.dbase.get_all_users(id_only=True, not_ban=True)
 
         start_mailing = datetime.now()

@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'users',
     'company',
+    'psychological_testing',
     'telegram_bot',
 ]
 

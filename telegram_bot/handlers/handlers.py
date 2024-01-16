@@ -52,7 +52,8 @@ async def sending_message(user_id, reply_text, keyboard, disable_w_p_p) -> Messa
             chat_id=user_id,
             text=reply_text,
             reply_markup=keyboard,
-            disable_web_page_preview=disable_w_p_p
+            # disable_web_page_preview=disable_w_p_p
+            disable_web_page_preview=False
         )
     return sent_message
 
@@ -62,7 +63,6 @@ async def sending_message(user_id, reply_text, keyboard, disable_w_p_p) -> Messa
 async def get_message_handler(message: Message, state: FSMContext) -> None:
     """ Обработчик входящих сообщений """
     reply_text, keyboard, next_state = await alm.get_reply(update=message, state=state)
-    # print(reply_text, keyboard, next_state)
     disable_w_p_p = False if reply_text in [] else True
 
     if last_handler_sent_message_id := await Base.button_search_and_action_any_collections(
@@ -72,7 +72,8 @@ async def get_message_handler(message: Message, state: FSMContext) -> None:
     ):
         if await state.get_state() in [
             'FSMMainMenuStates:create_response_manually',
-            'FSMMainMenuStates:submit_for_revision_task_response_manually'
+            'FSMMainMenuStates:submit_for_revision_task_response_manually',
+            'FSMMainMenuStates:question_openai'
         ]:
             await edit_message(
                 chat_id=message.from_user.id, message_id=last_handler_sent_message_id)

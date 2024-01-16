@@ -176,7 +176,7 @@ class MessageGetNewPhoneNumber(BaseMessage, Utils):
                 next_state = 'reset_state'
             else:
                 reply_text = ("<b>Ошибка изменения номера телефона\n"
-                              "Введите номер телефона в формате 788866644422</b>")
+                              "Введите номер телефона в формате 79998887766</b>")
         except Exception:
             pass
         return reply_text, next_state
@@ -188,7 +188,7 @@ class ChangePhoneNumber(BaseButton, Utils):
         return '☎ Изменить номер телефона'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Введите номер телефона в формате 799966644422</b>'
+        return FACE_BOT + '<b>Введите номер телефона в формате 79998887766</b>'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]

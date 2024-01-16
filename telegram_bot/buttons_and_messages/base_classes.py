@@ -17,15 +17,17 @@ class Base(ABC):
     logger = logger
     exception_controller = None  # Добавляется в loader.py
 
+    reset_state = 'reset_state'
+    default_error = FACE_BOT + 'Извините, произошла ошибка, попробуйте немного позже'
+
     default_bad_text = 'Нет данных'
     default_service_in_dev = '🛠 Сервис в разработке, в ближайшее время функционал будет доступен'
     default_incorrect_data_input_text = FACE_BOT + 'Введены некорректные данные - {text}'
-    default_generate_answer = FACE_BOT + '✍ Пишу текст... , немного подождите пожалуйста ...'
+    default_generate_answer = FACE_BOT + '✍ Пишу ответ... , немного подождите пожалуйста ...'
     default_download_information = FACE_BOT + '🌐 {about}\nнемного подождите пожалуйста ...'
     default_choice_menu = FACE_BOT + '<b>Выберите пункт меню:</b>'
-    default_choice_feedback = FACE_BOT + '<b>Выберите отзыв:</b>'
-    default_not_feeds_in_supplier = FACE_BOT + '<b>Отзывов пока нет</b>'
-    default_i_generate_text = FACE_BOT + 'Я сгенерировал текст:\n\n'
+    # default_i_generate_text = FACE_BOT + 'Мой ответ на Ваш вопрос:\n\n'
+    default_i_generate_text = FACE_BOT + '\t\t'
     default_text_for_payment_link = FACE_BOT + f'<b>Ваша ссылка на оплату:</b>\n\n'
 
     # Как выглядит словарь
@@ -114,6 +116,8 @@ class Base(ABC):
             updates_data: bool = False,
             aufm_catalog_key: Optional[str] = None
             ) -> Optional[Any]:
+
+        # print('@base_classes.py@:', cls.general_collection)
 
         if update and not user_id:
             user_id = update.from_user.id
@@ -213,7 +217,8 @@ class BaseMessage(Base):
         return cls.__instance
 
     def __init__(self, state_or_key: Optional[str] = None, reply_text: Optional[str] = None,
-                 children_buttons: Optional[List] = None, parent_name: Optional[str] = None):
+                 children_buttons: Optional[List] = None, parent_name: Optional[str] = None,
+                 messages: Optional[Dict] = None):
 
         if self.__class__.__name__ != BaseMessage.__name__:
             self.class_name = self.__class__.__name__
@@ -221,6 +226,8 @@ class BaseMessage(Base):
             self.state_or_key = self._set_state_or_key() if not state_or_key else state_or_key
             self.reply_text = self._set_reply_text() if not reply_text else reply_text
             self.children_buttons = self._set_children() if not children_buttons else children_buttons
+            self.children_messages = self._set_messages() if not messages else messages
+
             self.next_state = self._set_next_state()
             self.general_collection.setdefault('general_messages', dict())[self.state_or_key] = self
 
@@ -235,6 +242,9 @@ class BaseMessage(Base):
         reply_text = ('Default: state_or_key not set -> '
                       'override method _set_state_or_key in class') + self.class_name
         return reply_text
+
+    def _set_messages(self) -> Dict:
+        return dict()
 
 
 class BaseButton(Base):
@@ -335,3 +345,4 @@ class GoToBack(BaseButton):
 class Utils(Base):
     """Класс дополнительных инструментов для реализации меню"""
     list_children_buttons = [GoToBack()]
+    # greeting_button_script = StartGreetingButton()

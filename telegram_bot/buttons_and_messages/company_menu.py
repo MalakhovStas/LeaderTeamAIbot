@@ -139,7 +139,8 @@ class ChangeRoleInCompany(BaseButton, Utils):
         return 'Изменить роль в компании'
 
     def _set_reply_text(self) -> Optional[str]:
-        reply_text = FACE_BOT + '<b>Выберите роль согласно пунктам или введите свой вариант:</b>\n'
+        reply_text = FACE_BOT + ('<b>Введите номер, соответствующий Вашей роли в компании '
+                                 'согласно пунктам или введите текстом свой вариант:</b>\n\n')
         for num, role in COMPANY_ROLES.items():
             reply_text += f'{num}. {role}\n'
         return reply_text
@@ -270,12 +271,13 @@ class CompanyMenu(BaseButton):
             self.children_buttons = [RegisterCompany(parent_name=self.class_name)]
 
         else:
+            self.children_buttons = self._set_children()
             # from asgiref.sync import sync_to_async
             # company_members = await sync_to_async(list)(user.company.members.all())
             # company_members = [member async for member in user.company.members.all()]
             # for num, member in enumerate(user.company.members.all(), 1):
 
-            reply_text = f'<b>{FACE_BOT}Информация о компании "{user.company.name}"</b>\n\n'
+            reply_text = f'<b>{FACE_BOT} Компания "{user.company.name}"</b>\n\n'
             # reply_text += (f"<b>Название:</b> "
             #                f"{user.company.name if user.company.name else ''}\n")
             reply_text += (f"<b>Ваша роль в компании:</b> "
@@ -289,12 +291,12 @@ class CompanyMenu(BaseButton):
             async for member in user.company.members.all():
                 num += 1
                 reply_text += (f"{num}. {member.role_in_company} - "
-                               f"{'Вы' if member == user else member.username}")
+                               f"{'Вы' if member == user else member.username}\n")
         return reply_text, self.next_state
 
     def _set_children(self) -> List:
         return [
-            CompanyCalendarButton(parent_name=self.class_name),
+            # CompanyCalendarButton(parent_name=self.class_name),
             AddedCompanyMemberButton(parent_name=self.class_name),
             ChangeRoleInCompany(parent_name=self.class_name),
             ChangeAboutCompany(parent_name=self.class_name),

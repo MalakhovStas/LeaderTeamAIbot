@@ -1,15 +1,16 @@
+"""Модуль инструментов для взаимодействия с библиотекой и сервисом OpenAI"""
 import asyncio
 from typing import Sequence, Optional, Union, List, Tuple, Dict
 
 import openai
 from aiogram.types import CallbackQuery, Message
-from ..models import TelegramAccount
-
 
 from ..config import (
     OpenAI_TOKEN,
     OpenAI_ORGANIZATION,
+    OpenAI_PROXY,
     INVITATION,
+    ASSISTANT_PROMPT,
     MODEL,
     TEMPERATURE,
     MAX_TOKENS,
@@ -21,10 +22,11 @@ from ..config import (
     DEFAULT_NOT_ENOUGH_BALANCE,
     DEBUG
 )
+from ..models import TelegramAccount
 
 
 class OpenAIManager:
-    """ Класс Singleton для работы с API ChatGPT """
+    """ Класс для работы с API ChatGPT """
     __instance = None
     __default_bad_answer = DEFAULT_FEED_ANSWER
 
@@ -37,6 +39,7 @@ class OpenAIManager:
         self.openai = openai
         self.openai.organization = OpenAI_ORGANIZATION
         self.openai.api_key = OpenAI_TOKEN
+        self.openai.proxy = OpenAI_PROXY
         self.dbase = dbase
         self.bot = bot
         self.logger = logger
@@ -44,6 +47,8 @@ class OpenAIManager:
 
     @staticmethod
     async def prompt_correct(text: str) -> str:
+        """Для корректировки входящего запроса, в конце обязательно должна стоять точка,
+        иначе модель ИИ пытается продолжить текст, а не ответить на него"""
         text = text.strip()
         if not text.endswith('.'):
             text += '.'
@@ -59,7 +64,7 @@ class OpenAIManager:
         # await self.bot.answer_callback_query(callback_query_id=update.id, show_alert=False,
         #                                      text=DEFAULT_NOT_ENOUGH_BALANCE)
         if DEBUG:
-            self.logger.warning(self.sign + f"{user_id=} | {user.username=} | "
+            self.logger.warning(self.sign + f"{user_id=} | {user.tg_username=} | "
                                             f"{user.balance_requests=} | "
                                             f"answer: {DEFAULT_NOT_ENOUGH_BALANCE[:100]}...")
         return False
@@ -93,6 +98,7 @@ class OpenAIManager:
                 answer = self.__default_bad_answer
 
         except Exception as exception:
+            # from ..utils.admins_send_message import func_admins_message
             # await func_admins_message(exc=f'{self.sign} {exception=}')
             if DEBUG:
                 self.logger.warning(self.sign + f"{exception=}")
@@ -120,9 +126,18 @@ class OpenAIManager:
             self.logger.info(self.sign + f"question: {prompt[:100]}...")
 
         messages_data = list() if not isinstance(messages_data, list) else messages_data
+        if not messages_data:
+            # добавляет начальный prompt для настройки ИИ бота
+            messages_data.append({"role": "assistant", "content": ASSISTANT_PROMPT})
+
         messages_data.append({"role": "user", "content": prompt})
 
         try:
+            # print(MODEL)
+            # print(messages_data)
+            # print(self.openai.organization)
+            # print(self.openai.api_key)
+            # print(messages_data)
             response = await asyncio.wait_for(self.openai.ChatCompletion.acreate(
                 model=MODEL,
                 messages=messages_data,

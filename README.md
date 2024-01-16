@@ -1,12 +1,11 @@
-# Django-Aiogram-Telegram-Bot version  0.1.0
+# Leader-Team-AI-bot version  0.1.0
 
 ### Установка и запуск
 1. Клонируйте репозиторий с проектом на локальную машину или удалённый сервер
-2. Добавьте в корень проекта файл с секретной информацией <font color=green>.env.local</font> заполнив его по [примеру](.env.default)
+2. Добавьте в директорию env файл с секретной информацией <font color=green>.env.local</font> заполнив его по [примеру](env/.env.default)
 3. Запустите Docker контейнеры с базой данных и Redis
 4. Создайте и активируйте виртуальное окружение
-5. Запустите авто тесты для проверки работоспособности
-6. Запустите приложение
+5. Запустите приложение
 
 #### Запуск Docker контейнеров
 ```shell
@@ -22,15 +21,7 @@ poetry install
 ```shell
 poetry shell
 ```
-#### Запуск авто тестов
+#### Запуск Телеграм бота
 ```shell
-pytest src/tests
+python manage.py start_tg_bot
 ```
-#### Запуск приложения
-* Для разработки:\
-<font size = 2>запускает Uvicorn</font>,
-<font size = 2>при необходимости измените хост(FASTAPI_HOST) и порт(FASTAPI_PORT) в [settings.py](config/settings.py "файл основных настроек проекта")</font>
-```shell
-python main.py
-```
-<font size = 2>для проверки перейдите по ссылке [http://0.0.0.0:8000/ping](http://0.0.0.0:8000/ping "метод проверки подключения")</font>

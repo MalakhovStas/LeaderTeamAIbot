@@ -11,6 +11,7 @@ class UserRegAdmin(UserAdmin):
     """Регистрация модели User в админке"""
 
     list_display = 'username', 'is_superuser', 'is_staff', 'is_active',
+    readonly_fields = ('seven_petals', 'ai_dialog',)
     fieldsets = (
         (_('credentials'), {'fields': ('username', 'password',)}),
         (_('personal information'),
@@ -22,21 +23,24 @@ class UserRegAdmin(UserAdmin):
              'email',
              'photo',
              'company',
+             'seven_petals',
+             'ai_dialog',
 
          )}),
-        (
-            _('permissions'),
-            {
-                'fields': (
-                    'is_active',
-                    'is_staff',
-                    'is_superuser',
-                    'groups',
-                    'user_permissions',
-                ),
-            },
-        ),
-        (_('important dates'), {'fields': ('last_login', 'date_joined',)}),
+        # (
+        #     _('permissions'),
+        #     {
+        #         'fields': (
+        #             'is_active',
+        #             'is_staff',
+        #             'is_superuser',
+        #             'groups',
+        #             'user_permissions',
+        #         ),
+        #     },
+        # ),
+        # (_('important dates'), {'fields': ('last_login', 'date_joined',)}),
+        (_('important dates'), {'fields': ('date_joined',)}),
     )
     add_fieldsets = (
         (

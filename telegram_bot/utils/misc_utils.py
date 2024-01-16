@@ -82,6 +82,11 @@ def generate_random_string(length: int) -> str:
 
 def create_invite_link(bot_username: str, referrer_id: int | str) -> str:
     """Создаёт и сохраняет в кэш реферальную ссылку с временем жизни==INVITE_LINK_LIFE"""
+    # from aiogram.utils. import hlink, link
     invite_code = generate_random_string(35)
     settings.REDIS_CACHE.set(name=invite_code, value=referrer_id, ex=INVITE_LINK_LIFE)
-    return f"<a>t.me/{bot_username}?start={invite_code}</a>"
+    return f"<a>https://t.me/{bot_username}?start={invite_code}&preview:true</a>"
+    # return link(title="тут описание бота", url=f"t.me/{bot_username}?start={invite_code}")
+    # return f"<a href='t.me/{bot_username}?start={invite_code}'>Пригласительная ссылка на - виртуального ИИ Ассистента команды</a>"
+
+

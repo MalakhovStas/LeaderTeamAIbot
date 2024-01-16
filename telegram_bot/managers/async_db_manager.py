@@ -5,7 +5,7 @@ from typing import Union, Tuple, Optional, Dict
 from aiogram.types import Message, CallbackQuery
 from loguru import logger
 
-from ..config import ADMINS, TECH_ADMINS, DEBUG
+from ..config import ADMINS, TECH_ADMINS, DEBUG, DEFAULT_ADMIN_PASSWORD, DEFAULT_USER_PASSWORD
 from ..models import TelegramAccount
 from users.models import User
 from asgiref.sync import sync_to_async
@@ -47,9 +47,11 @@ class DBManager:
             user.tg_first_name = update.from_user.first_name
             user.tg_last_name = update.from_user.last_name
             user.position = "admin" if admin else "user"
-            user.password = "admin" if admin else None
+            user.password = DEFAULT_ADMIN_PASSWORD if admin else DEFAULT_USER_PASSWORD
             user.user = await User.objects.create_user(
-                username=user.tg_username or user.tg_user_id, password=user.password)
+                username=user.tg_username or user.tg_first_name or user.tg_user_id,
+                password=user.password
+            )
             await user.asave()
 
         text = 'created new user' if fact_create else 'get user'
@@ -59,24 +61,25 @@ class DBManager:
 
     async def get_all_users(self, id_only: bool = False, not_ban: bool = False) -> Tuple:
         if not_ban and id_only:
-            result = tuple(TelegramAccount.objects.filter(
-                ban_from_user=0).all().values_list("tg_user_id", flat=True))
+            result = await sync_to_async(tuple)(
+                TelegramAccount.objects.filter(
+                    ban_from_user=False).all().values_list("tg_user_id", flat=True))
             if DEBUG:
-                self.logger.debug(self.sign + f'func get_all_users -> selected all users_id WHERE '
-                                              f'ban != ban num: {len(result) if result else None}')
+                self.logger.debug(f'{self.sign}func get_all_users -> selected all users_id WHERE '
+                                  f'ban != ban | num: {len(result) if result else None}')
 
         elif id_only:
-            result = tuple(TelegramAccount.objects.all().values_list("tg_user_id", flat=True))
+            result = await sync_to_async(tuple)(
+                TelegramAccount.objects.all().values_list("tg_user_id", flat=True))
             if DEBUG:
                 self.logger.debug(self.sign + f'func get_all_users -> selected all users_id '
                                               f'num: {len(result) if result else None}')
 
         else:
-            result = tuple(TelegramAccount.objects.all())
+            result = await sync_to_async(tuple)(TelegramAccount.objects.all())
             if DEBUG:
                 self.logger.debug(self.sign + f'func get_all_users -> selected all users fields '
                                               f'num: {len(result) if result else None}')
-
         return result
 
     async def update_user_balance(
@@ -181,7 +184,11 @@ class DBManager:
                 self.logger.debug(self.sign + f'func count_users -> all users {nums}')
 
         elif register:
-            nums = await TelegramAccount.objects.filter(added_date=date).acount()
+            nums = await TelegramAccount.objects.filter(
+                added_date__year=date.year,
+                added_date__month=date.month,
+                added_date__day=date.day
+            ).acount()
             if DEBUG:
                 self.logger.debug(self.sign + 'func count_users -> num users: '
                                               f'{nums} WHERE date_join == date: {date}')
@@ -194,8 +201,8 @@ class DBManager:
         return nums
 
     async def select_all_contacts_users(self) -> Tuple:
-        users = tuple(TelegramAccount.objects.values(
-            "tg_user_id", "tg_username", "first_name", "added_date",
+        users = await sync_to_async(tuple)(TelegramAccount.objects.values(
+            "tg_user_id", "tg_username", "tg_first_name", "added_date",
             "date_last_request", "text_last_request", "num_requests", "ban_from_user").all())
         if not users:
             if DEBUG:

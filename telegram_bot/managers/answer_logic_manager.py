@@ -1,3 +1,4 @@
+"""Модуль инструментов формирования ответов на запросы пользователя"""
 from typing import Any, Optional, List, Union, Tuple
 
 from aiogram.dispatcher import FSMContext
@@ -9,7 +10,7 @@ from users.models import User
 
 
 class AnswerLogicManager:
-    """ Класс Singleton для работы с API Wildberries и соблюдения принципа DRY """
+    """ Класс логики формирования ответов на запросы пользователя """
     __instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -83,7 +84,6 @@ class AnswerLogicManager:
         buttons = None
         current_data = {}
         current_state = None
-
         if state:
             current_data = await state.get_data()
             current_state = await state.get_state()
@@ -118,7 +118,8 @@ class AnswerLogicManager:
                             settings.REDIS_CACHE.delete(invite_key)
                             await self.bot.send_message(
                                 chat_id=update.from_user.id,
-                                text=f'<b>Вы пригашены в команду компании "{user.company}"</b>'
+                                text=f'<b>Вы пригашены в команду компании '
+                                     f'"{user.company.name}"</b>'
                             )
                     else:
                         await self.bot.send_message(
@@ -129,6 +130,16 @@ class AnswerLogicManager:
                 if message := await self.main.button_search_and_action_any_collections(
                         action='get', button_name=current_state, message=True):
                     buttons = message.children_buttons
+
+        # print(current_state)
+        if (current_state and current_state.startswith('FSMGreetingScriptStates')
+                and current_state != "FSMGreetingScriptStates:get_contacts"):
+            not_keyboard = True
+            if current_state == "FSMGreetingScriptStates:start_greeting" \
+                    and current_data.get('new_user'):
+                button = await self.main.button_search_and_action_any_collections(
+                    action="get", button_name="StartGreetingButton")
+
         if not button and not message:
             """Если нет никаких данных всегда возвращает главное меню например по команде /start"""
             button = self.main

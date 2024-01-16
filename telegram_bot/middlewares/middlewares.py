@@ -3,16 +3,24 @@ from typing import Dict, Optional, List
 
 from aiogram.dispatcher.handler import CancelHandler
 from aiogram.dispatcher.middlewares import BaseMiddleware
-from aiogram.types import Message, CallbackQuery, Update
+from aiogram.types import Message, CallbackQuery, Update, ReplyKeyboardRemove
+from aiogram.dispatcher import FSMContext
 
-from ..config import FLOOD_CONTROL, FLOOD_CONTROL_STOP_TIME, DEFAULT_GREETING
-from ..loader import bot, security, dbase, Base
-from ..utils import exception_control
+from ..config import (
+    FLOOD_CONTROL,
+    FLOOD_CONTROL_STOP_TIME,
+    DEFAULT_GREETING,
+    TECH_ADMINS,
+    BOT_IN_DEV,
+    DEFAULT_BOT_IN_DEV_MESSAGE
+)
+from ..loader import bot, security, dbase, Base, storage
+from ..utils import exception_control, states
 
 
 class AccessControlMiddleware(BaseMiddleware):
-    """Класс предварительной обработки входящих сообщений для защиты от нежелательной нагрузки
-    и постобработки"""
+    """Класс предварительной обработки входящих сообщений для защиты от
+    нежелательной нагрузки и постобработки"""
     dbase = dbase
     bot = bot
     security = security
@@ -32,6 +40,13 @@ class AccessControlMiddleware(BaseMiddleware):
         # print(update.message.reply_markup.values.get('inline_keyboard')[0][0].text[-7:])
         # print(Base.general_collection)
 
+        if BOT_IN_DEV and update.from_user.id not in map(int, TECH_ADMINS):
+            await bot.send_message(
+                chat_id=update.from_user.id,
+                text=DEFAULT_BOT_IN_DEV_MESSAGE,
+                reply_markup=ReplyKeyboardRemove()
+            )
+            raise CancelHandler()
 
         # TODO выяснить доступ к боту открыт или только по приглашению
         # варианты:
@@ -64,8 +79,14 @@ class AccessControlMiddleware(BaseMiddleware):
         if user_status == "block":
             raise CancelHandler()
         elif user_status == "new_user":
-            await bot.send_message(chat_id=update.from_user.id, text=DEFAULT_GREETING)
-            print("# TODO необходимо пройти процедуру знакомства")
+            state = FSMContext(storage=storage, chat=update.from_user.id, user=update.from_user.id)
+            await state.set_state(state=states.FSMGreetingScriptStates.start_greeting)
+            await state.update_data(data={'new_user': True})
+            await bot.send_message(
+                chat_id=update.from_user.id,
+                text=DEFAULT_GREETING,
+                reply_markup=ReplyKeyboardRemove()
+            )
 
         text_last_request = "Message: " + str(update.text) if isinstance(
             update, Message) else "Callback: " + str(update.data)
