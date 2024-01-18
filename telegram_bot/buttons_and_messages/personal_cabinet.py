@@ -17,7 +17,7 @@ class MessageGetNewFIO(BaseMessage, Utils):
         return 'FSMPersonalCabinetStates:change_fio'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Не удалось изменить ФИО</b>'
+        return FACE_BOT + '<b>⚠ Не удалось изменить ФИО</b>'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -26,19 +26,19 @@ class MessageGetNewFIO(BaseMessage, Utils):
         next_state = self.next_state
         reply_text = self.reply_text
         try:
-            surname, name, patronymic = utils.get_fullname(update.text)
+            name, surname, patronymic = utils.get_fullname(update.text)
             user = await User.objects.filter(tg_accounts__tg_user_id=update.from_user.id).afirst()
-            if surname and name:
-                user.surname = surname
+            if name:
                 user.name = name
+                user.surname = surname
                 user.patronymic = patronymic
                 await user.asave()
-                reply_text = "<b>Фамилия имя отчество успешно изменены</b>"
+                reply_text = "<b>Данные успешно изменены</b>"
                 next_state = 'reset_state'
             else:
-                reply_text = "<b>Ошибка изменения данных\nфамилия, имя не могут быть пустыми</b>"
-        except Exception:
-            pass
+                reply_text = "<b>⚠ Ошибка изменения данных\nИмя не может быть пустым</b>"
+        except Exception as exc:
+            self.logger.error(exc)
         return reply_text, next_state
 
 
@@ -48,7 +48,8 @@ class ChangeFIO(BaseButton, Utils):
         return '✍ Изменить ФИО'  # 🔑 🔐 🗝
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Введите через пробел новые фамилию имя отчество:</b>'
+        return FACE_BOT + ('<b>Введите через пробел новые '
+                           'имя фамилию отчество в указанном порядке:</b>')
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -67,7 +68,7 @@ class MessageGetNewNickname(BaseMessage, Utils):
         return 'FSMPersonalCabinetStates:change_username'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Не удалось изменить Username</b>'
+        return FACE_BOT + '<b>⚠ Не удалось изменить Username</b>'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -81,8 +82,8 @@ class MessageGetNewNickname(BaseMessage, Utils):
             await user.asave()
             reply_text = "<b>Username успешно изменён</b>"
             next_state = 'reset_state'
-        except Exception:
-            pass
+        except Exception as exc:
+            self.logger.error(exc)
         return reply_text, next_state
 
 
@@ -111,7 +112,7 @@ class MessageGetNewEmail(BaseMessage, Utils):
         return 'FSMPersonalCabinetStates:change_email'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Не удалось изменить электронную почту</b>'
+        return FACE_BOT + '<b>⚠ Не удалось изменить электронную почту</b>'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -124,13 +125,13 @@ class MessageGetNewEmail(BaseMessage, Utils):
             if email := await utils.data_to_email(update.text):
                 user.email = email
                 await user.asave()
-                reply_text = "<b> Адрес электронной почты  успешно изменён </b>"
+                reply_text = "<b>Адрес электронной почты  успешно изменён</b>"
                 next_state = 'reset_state'
             else:
-                reply_text = ("<b>Ошибка изменения адреса электронной почты\n"
+                reply_text = ("<b>⚠ Ошибка изменения адреса электронной почты\n"
                               "Введите Email в формате mail@mail.com</b>")
-        except Exception:
-            pass
+        except Exception as exc:
+            self.logger.error(exc)
         return reply_text, next_state
 
 
@@ -159,7 +160,7 @@ class MessageGetNewPhoneNumber(BaseMessage, Utils):
         return 'FSMPersonalCabinetStates:change_phone_number'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Не удалось изменить ФИО</b>'
+        return FACE_BOT + '<b>⚠ Не удалось изменить ФИО</b>'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -172,13 +173,13 @@ class MessageGetNewPhoneNumber(BaseMessage, Utils):
             if phone_number := await utils.data_to_phone(update.text):
                 user.phone_number = phone_number
                 await user.asave()
-                reply_text = "<b> Номер телефона успешно изменён </b>"
+                reply_text = "<b>Номер телефона успешно изменён</b>"
                 next_state = 'reset_state'
             else:
-                reply_text = ("<b>Ошибка изменения номера телефона\n"
+                reply_text = ("<b>⚠ Ошибка изменения номера телефона\n"
                               "Введите номер телефона в формате 79998887766</b>")
-        except Exception:
-            pass
+        except Exception as exc:
+            self.logger.error(exc)
         return reply_text, next_state
 
 

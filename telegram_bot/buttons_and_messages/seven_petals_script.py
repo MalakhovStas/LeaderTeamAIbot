@@ -1,17 +1,17 @@
 """Модуль формирования сценаярия ороса 'Семь лепестков'"""
-import asyncio
 from typing import Optional, List, Dict
 
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from users.models import User
 from psychological_testing.models import SevenPetals
+from users.models import User
 from .base_classes import BaseButton, BaseMessage
+from .openai_menu import QuestionOpenAI
 from ..config import FACE_BOT
+from ..utils.generate_graph import seven_petals_generate_graph
 from ..utils.misc_utils import check_data
 from ..utils.states import FSMSevenPetalsStates
-from ..utils.generate_graph import seven_petals_generate_graph
 
 
 class MessageGetOpenQuestionsIrritation(BaseMessage):
@@ -20,7 +20,8 @@ class MessageGetOpenQuestionsIrritation(BaseMessage):
         return 'FSMSevenPetalsStates:open_questions_irritation'
 
     def _set_next_state(self) -> str:
-        return self.reset_state
+        # return self.reset_state
+        return FSMSevenPetalsStates.end_survey
 
     def _set_reply_text(self) -> Optional[str]:
         return self.default_error
@@ -100,12 +101,19 @@ class MessageGetGeneralQuestionsHappyInWork(BaseMessage):
         reply_text, next_state = self.reply_text, self.next_state
         state_data = await state.get_data()
         try:
-            num = await check_data(update.text) or 0
-            await state.update_data(
-                {"general_questions": state_data.get("general_questions") + int(num)})
-            reply_text = ("<b>Что в вашей текущей работе дает вам энергию, "
-                          "силу, вдохновение, драйв, удовольствие?</b>")
-            self.children_buttons = []
+            num = int(await check_data(update.text) or 0)
+            if num < 1 or num > 10:
+                reply_text = ("⚠ Оценка должна находится в указанном диапазоне\n\n"
+                              "<b>Насколько вы в настоящее время счастливы в своей работе? "
+                              "(введите число по шкале от 1 до 10)</b>")
+                self.children_buttons = []
+                next_state = FSMSevenPetalsStates.general_questions_happy_in_work
+            else:
+                await state.update_data(
+                    {"general_questions": state_data.get("general_questions") + num})
+                reply_text = ("<b>Что в вашей текущей работе дает вам энергию, "
+                              "силу, вдохновение, драйв, удовольствие?</b>")
+                self.children_buttons = []
         except Exception as exc:
             self.logger.error(exc)
         return f'{FACE_BOT}{reply_text}', next_state
@@ -128,11 +136,18 @@ class MessageGetGeneralQuestionsHappyMan(BaseMessage):
     async def _set_answer_logic(self, update: Message, state: Optional[FSMContext] = None):
         reply_text, next_state = self.reply_text, self.next_state
         try:
-            num = await check_data(update.text) or 0
-            await state.update_data({"general_questions": int(num)})
-            reply_text = ("<b>Насколько вы в настоящее время счастливы в своей работе? "
-                          "(введите число по шкале от 1 до 10)</b>")
-            self.children_buttons = []
+            num = int(await check_data(update.text) or 0)
+            if num < 1 or num > 10:
+                reply_text = ("⚠ Оценка должна находится в указанном диапазоне\n\n"
+                              "<b>Насколько вы счастливый человек? "
+                              "(введите число по шкале от 1 до 10)</b>")
+                self.children_buttons = []
+                next_state = FSMSevenPetalsStates.general_questions_happy_man
+            else:
+                await state.update_data({"general_questions": num})
+                reply_text = ("<b>Насколько вы в настоящее время счастливы в своей работе? "
+                              "(введите число по шкале от 1 до 10)</b>")
+                self.children_buttons = []
         except Exception as exc:
             self.logger.error(exc)
         return f'{FACE_BOT}{reply_text}', next_state
@@ -156,10 +171,6 @@ class SevenPetalsGeneralLogic(BaseButton):
         reply_text, next_state = self.reply_text, self.next_state
         current_state = await state.get_state()
         state_data = await state.get_data()
-        # print(current_state)
-        # print("state_data:", state_data)
-        # print("score:", self.score)
-        # print("score_changeling:", self.score_changeling)
         try:
             if current_state == "FSMSevenPetalsStates:optimism_mobilizing":
                 await state.update_data({"optimism": self.score})
@@ -407,7 +418,8 @@ class SevenPetalsSurveyButton(BaseButton):
         return '❉ \t Опрос - Семь лепестков'
 
     def _set_next_state(self) -> str:
-        return self.reset_state
+        # return self.reset_state
+        return FSMSevenPetalsStates.start_survey
 
     def _set_reply_text(self) -> Optional[str]:
         return self.default_error
@@ -480,4 +492,5 @@ class SevenPetalsSurveyButton(BaseButton):
 
         return [
             SevenPetalsNewSurveyButton(parent_name=self.class_name),
+            QuestionOpenAI(new=False)
         ]

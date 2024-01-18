@@ -42,6 +42,9 @@ class FSMSevenPetalsStates(StatesGroup):
     из таблицы - Опросник 7 источников.xlsx"""
     # _changeling - вопрос перевёртыш
 
+    start_survey = State()
+    end_survey = State()
+
     optimism_mobilizing = State()
     optimism_support = State()
     optimism_changeling = State()

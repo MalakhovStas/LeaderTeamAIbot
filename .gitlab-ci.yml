@@ -5,7 +5,7 @@ stages:
 
 flake8:
   tags:
-    - DjangoAiogramTgBot
+    - LeaderTeamAIbot
 
   stage: code quality
   when: always
@@ -19,7 +19,7 @@ flake8:
 
 test:
   tags:
-    - DjangoAiogramTgBot
+    - LeaderTeamAIbot
 
   stage: testing
   when: always
@@ -37,7 +37,7 @@ test:
 
 mypy:
   tags:
-    - DjangoAiogramTgBot
+    - LeaderTeamAIbot
 
   stage: types
   when: always

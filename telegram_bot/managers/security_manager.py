@@ -66,10 +66,10 @@ class SecurityManager:
             await func_admins_message(
                 update=update,
                 message=f'&#129395 <b>NEW USER</b>\n'
-                        f'<b>ID:</b> {user_id}\n'
+                        # f'<b>ID:</b> {user_id}\n'
                         f'<b>Name:</b> {update.from_user.full_name}\n'
                         f'<b>Contact:</b> {contact}\n'
-                        f'<b>Number in base:</b> {fact_create_and_num_users}'
+                        # f'<b>Number in base:</b> {fact_create_and_num_users}'
             )
         if fact_create_and_num_users:
             user_status = 'new_user'

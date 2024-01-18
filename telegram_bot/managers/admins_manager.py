@@ -8,11 +8,12 @@ import psutil
 from aiogram.types import Message
 from aiogram.utils.exceptions import BotBlocked, UserDeactivated, ChatNotFound
 
+from users.models import User
 from ..buttons_and_messages.base_classes import Base
 from ..config import ADMINS, TECH_ADMINS, DEBUG
 from ..logger_config import PATH_FILE_DEBUG_LOGS, PATH_FILE_ERRORS_LOGS
-from ..utils.states import FSMAdminStates
 from ..utils import admins_send_message
+from ..utils.states import FSMAdminStates
 
 
 class AdminsManager:
@@ -189,20 +190,30 @@ class AdminsManager:
                 ws.append((
                     'Telegram_id', 'Name', 'Username', 'Дата регистрации',
                     'Дата последнего запроса', 'Текст последнего запроса',
-                    'Всего запросов', 'Бан от пользователя'
+                    'Всего запросов', 'Бан от пользователя', "Компания", "Роль",
+                    "О компании", "О команде"
                 ))
                 for user in await self.dbase.select_all_contacts_users():
-                    username = user.get("tg_username")
-                    ws.append((
-                        user.get("tg_user_id"),
-                        user.get("tg_first_name"),
-                        f'{f"@{username}" if username else ""}',
-                        str(user.get("added_date").strftime('%d.%m.%Y %H:%M:%S')),
-                        str(user.get("date_last_request").strftime('%d.%m.%Y %H:%M:%S')),
-                        user.get("text_last_request"),
-                        user.get("num_requests"),
-                        user.get("ban_from_user")
-                    ))
+                    if tg_user_id := user.get("tg_user_id"):
+                        dj_user: User = await (User.objects.filter(
+                            tg_accounts__tg_user_id=tg_user_id).select_related(
+                            "company").afirst())
+                        username = user.get("tg_username")
+                        ws.append((
+                            tg_user_id,
+                            user.get("tg_first_name"),
+                            f'{f"@{username}" if username else ""}',
+                            str(user.get("added_date").strftime('%d.%m.%Y %H:%M:%S')),
+                            str(user.get("date_last_request").strftime('%d.%m.%Y %H:%M:%S')),
+                            user.get("text_last_request"),
+                            user.get("num_requests"),
+                            "бан" if user.get("ban_from_user") else "нет",
+                            dj_user.company.name if dj_user.company else "",
+                            dj_user.role_in_company if dj_user.company else "",
+                            dj_user.company.about_company if dj_user.company else "",
+                            dj_user.company.about_team if dj_user.company else "",
+
+                        ))
                 wb.save('users_info.xlsx')
 
                 text = open('users_info.xlsx', 'rb')
@@ -264,7 +275,7 @@ class AdminsManager:
         await admins_send_message.func_admins_message(
             update=update,
             message='&#9888 <b>Ошибки рассылки:</b>\n'
-                    f'<b>Errors:</b> {dict_errors}\n'
+                    f'<b>Errors:</b> {dict_errors or "нет"}\n'
                     f'<b>Отправлено:</b> {num_send} из {len(id_users)}\n'
                     f'<b>Время рассылки:</b> {time_mailing}'
         )

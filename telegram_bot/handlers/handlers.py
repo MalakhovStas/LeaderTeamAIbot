@@ -133,8 +133,12 @@ async def get_call_handler(call: CallbackQuery, state: FSMContext) -> None:
     reply_text, keyboard, next_state = await alm.get_reply(update=call, state=state)
     disable_w_p_p = False if call.data == 'TopUpBalance' else True
 
-    if call.data in ['CreateNewTaskForResponseManually',
-                     'SubmitForRevisionTaskResponseManually', 'RegenerateAIResponse']:
+    if (call.data in [
+        'CreateNewTaskForResponseManually',
+        'SubmitForRevisionTaskResponseManually',
+        'RegenerateAIResponse']) or (
+            call.data in ['QuestionOpenAI'] and await state.get_state() in [
+            'FSMSevenPetalsStates:start_survey', 'FSMSevenPetalsStates:end_survey']):
         await edit_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     else:
         await delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
