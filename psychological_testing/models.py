@@ -6,25 +6,25 @@ from django.utils.translation import gettext_lazy as _
 class SevenPetals(models.Model):
     """Модель хранения данных опроса 'Семь лепестков'"""
 
-    optimism = models.SmallIntegerField(
+    optimism = models.FloatField(
         null=False, blank=True, default=0, verbose_name=_('optimism'))
 
-    stream = models.SmallIntegerField(
+    stream = models.FloatField(
         null=False, blank=True, default=0, verbose_name=_('stream'))
 
-    sense = models.SmallIntegerField(
+    sense = models.FloatField(
         null=False, blank=True, default=0, verbose_name=_('sense'))
     
-    love = models.SmallIntegerField(
+    love = models.FloatField(
         null=False, blank=True, default=0, verbose_name=_('love'))
 
-    play = models.SmallIntegerField(
+    play = models.FloatField(
         null=False, blank=True, default=0, verbose_name=_('play'))
     
-    study = models.SmallIntegerField(
+    study = models.FloatField(
         null=False, blank=True, default=0, verbose_name=_('study'))
     
-    impact = models.SmallIntegerField(
+    impact = models.FloatField(
         null=False, blank=True, default=0, verbose_name=_('impact'))
 
     general_questions = models.SmallIntegerField(

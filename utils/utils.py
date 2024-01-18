@@ -6,20 +6,22 @@ import string
 
 def get_fullname(search_query: str) -> Tuple:
     """Выделяет из строки имя, фамилию, отчество разделённые пробелом"""
-    surname, name, patronymic = None, None, None
+    name, surname, patronymic = None, None, None
     if search_query:
         search_query = search_query.split(' ', maxsplit=2)
+        if len(search_query) == 1 and '\n' in search_query[0]:
+            search_query = search_query[0].split('\n', maxsplit=2)
         if 0 < len(search_query) <= 3 and all([word.isalpha() for word in search_query]):
             if len(search_query) == 3:
-                surname, name, patronymic = search_query
+                name, surname, patronymic = search_query
             elif len(search_query) == 2:
-                surname, name, patronymic = search_query[0], search_query[1], ''
+                name, surname, patronymic = search_query[0], search_query[1], ''
             elif len(search_query) == 1:
-                surname, name, patronymic = search_query[0], None, None
-    surname = surname.lower().title() if isinstance(surname, str) else surname
+                name, surname, patronymic = search_query[0], None, None
     name = name.lower().title() if isinstance(name, str) else name
+    surname = surname.lower().title() if isinstance(surname, str) else surname
     patronymic = patronymic.lower().title() if isinstance(patronymic, str) else patronymic
-    return surname, name, patronymic
+    return name, surname, patronymic
 
 
 def get_passport(search_query: str) -> Union[int, bool]:

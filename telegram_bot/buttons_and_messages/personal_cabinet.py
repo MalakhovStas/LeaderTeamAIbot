@@ -36,7 +36,7 @@ class MessageGetNewFIO(BaseMessage, Utils):
                 reply_text = "<b>Данные успешно изменены</b>"
                 next_state = 'reset_state'
             else:
-                reply_text = "<b>⚠ Ошибка изменения данных\nИмя не может быть пустым</b>"
+                reply_text = "⚠ Ошибка изменения данных\n<b>Имя не может быть пустым</b>"
         except Exception as exc:
             self.logger.error(exc)
         return reply_text, next_state
