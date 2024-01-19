@@ -193,7 +193,7 @@ class MessageGetFullname(BaseMessage, Utils):
         self.children_messages = {message.state_or_key: message
                                   for message in self.message_get_company}
 
-        add_reply_text = '<b>⚠ Не удалось сохранить ФИО</b>'
+        add_reply_text = '<b>⚠ Не удалось сохранить имя и фамилию</b>'
         try:
             name, surname, patronymic = utils.get_fullname(update.text)
             # изменён порядок на имя, фамилию отчество
@@ -203,12 +203,12 @@ class MessageGetFullname(BaseMessage, Utils):
             user.surname = surname
             user.patronymic = patronymic
             await user.asave()
-            if surname and name and patronymic:
-                add_reply_text = '<b>Ваши ФИО сохранены</b>'
-            elif surname and name:
-                add_reply_text = '<b>Ваши Имя и Фамилия сохранены</b>'
+            # if surname and name and patronymic:
+            #     add_reply_text = '<b>Ваши ФИО сохранены</b>'
+            if surname and name:
+                add_reply_text = '<b>Ваши имя и фамилия сохранены</b>'
             else:
-                add_reply_text = '<b>Ваше Имя сохранено</b>'
+                add_reply_text = '<b>Ваше имя сохранено</b>'
             if user.company:
                 reply_text = (f'<b>Введите номер, соответствующий Вашей роли в компании '
                               f'согласно пунктам или введите текстом свой вариант:</b>\n\n')
@@ -237,7 +237,7 @@ class StartGreetingButton(BaseButton):
                            'как Ассистенту максимально эффективно работать с Вашими запросами. '
                            'При необходимости Вы сможете внести изменения в свой профиль.\n\n'
                            'Как вас зовут? '
-                           '(введите через пробел ваше Имя Фамилию и Отчество в таком порядке)')
+                           '(введите через пробел ваши имя и фамилию в указанном порядке)')
 
     def _set_messages(self) -> Dict:
         return {message.state_or_key: message

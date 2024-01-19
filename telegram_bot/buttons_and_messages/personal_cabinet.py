@@ -17,7 +17,7 @@ class MessageGetNewFIO(BaseMessage, Utils):
         return 'FSMPersonalCabinetStates:change_fio'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>⚠ Не удалось изменить ФИО</b>'
+        return FACE_BOT + '<b>⚠ Не удалось изменить Имя/Фамилию</b>'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -45,11 +45,11 @@ class MessageGetNewFIO(BaseMessage, Utils):
 class ChangeFIO(BaseButton, Utils):
     """Кнопка изменить ФИО"""
     def _set_name(self) -> str:
-        return '✍ Изменить ФИО'  # 🔑 🔐 🗝
+        return '✍ Изменить Имя/Фамилию'  # 🔑 🔐 🗝
 
     def _set_reply_text(self) -> Optional[str]:
         return FACE_BOT + ('<b>Введите через пробел новые '
-                           'имя фамилию отчество в указанном порядке:</b>')
+                           'имя и фамилию в указанном порядке:</b>')
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -160,7 +160,7 @@ class MessageGetNewPhoneNumber(BaseMessage, Utils):
         return 'FSMPersonalCabinetStates:change_phone_number'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>⚠ Не удалось изменить ФИО</b>'
+        return FACE_BOT + '<b>⚠ Не удалось изменить номер телефона</b>'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -216,9 +216,9 @@ class PersonalCabinet(BaseButton):
         user = await User.objects.filter(
             tg_accounts__tg_user_id=user_id).select_related("company").afirst()
         reply_text = f"<b>{FACE_BOT}Информация о вашем профиле:</b>\n\n"
-        reply_text += f"<b>Фамилия:</b> {user.surname if user.surname else ''}\n"
         reply_text += f"<b>Имя:</b> {user.name if user.name else ''}\n"
-        reply_text += f"<b>Отчество:</b> {user.patronymic if user.patronymic else ''}\n"
+        reply_text += f"<b>Фамилия:</b> {user.surname if user.surname else ''}\n"
+        # reply_text += f"<b>Отчество:</b> {user.patronymic if user.patronymic else ''}\n"
         reply_text += f"<b>Username:</b> {user.username if user.username else ''}\n"
         reply_text += f"<b>Email:</b> {user.email if user.email else ''}\n"
         reply_text += f"<b>Номер телефона:</b> {user.phone_number  if user.phone_number else ''}\n"
