@@ -32,7 +32,7 @@ class MessageChangeAboutTeam(BaseMessage, Utils):
                 tg_accounts__tg_user_id=update.from_user.id).select_related("company").afirst()
             user.company.about_team = update.text
             await user.company.asave()
-            reply_text = f"<b>Информация о команде {user.company.name} успешно изменена</b>"
+            reply_text = f"Звучит перспективно 😉 Так и записываю."
             next_state = 'reset_state'
         except Exception:
             pass
@@ -45,7 +45,7 @@ class ChangeAboutTeam(BaseButton, Utils):
         return 'Изменить информацию о команде'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Введите информацию команде:</b>\n'
+        return FACE_BOT + 'Расскажите мне о вашей команде 🙂\n'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -77,7 +77,7 @@ class MessageChangeAboutCompany(BaseMessage, Utils):
                 tg_accounts__tg_user_id=update.from_user.id).select_related("company").afirst()
             user.company.about_company = update.text
             await user.company.asave()
-            reply_text = f"<b>Информация о компании {user.company.name} успешно изменена</b>"
+            reply_text = f"Я запомню. Успехов на новом месте 😊"
             next_state = 'reset_state'
         except Exception:
             pass
@@ -90,7 +90,7 @@ class ChangeAboutCompany(BaseButton, Utils):
         return 'Изменить информацию о компании'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Введите информацию компании:</b>\n'
+        return FACE_BOT + 'Расскажите мне о вашей компании 🙂\n'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -126,7 +126,7 @@ class MessageChangeRoleInCompany(BaseMessage, Utils):
             else:
                 user.role_in_company = update.text
             await user.asave()
-            reply_text = f"<b>Ваша роль в компании {user.company.name} успешно изменена</b>"
+            reply_text = f"Я запомню. Успехов на новом месте 😊"
             next_state = 'reset_state'
         except Exception:
             pass
@@ -139,10 +139,11 @@ class ChangeRoleInCompany(BaseButton, Utils):
         return 'Изменить роль в компании'
 
     def _set_reply_text(self) -> Optional[str]:
-        reply_text = FACE_BOT + ('<b>Введите номер, соответствующий Вашей роли в компании '
-                                 'согласно пунктам или введите текстом свой вариант:</b>\n\n')
+        reply_text = FACE_BOT + ('Ого, вы взяли на себя что-то новенькое 😊\n'
+                                 'Введите номер, который соответствует вашей текущей роли:\n\n')
         for num, role in COMPANY_ROLES.items():
             reply_text += f'{num}. {role}\n'
+        reply_text += '\nЕсли нет подходящего варианта — впишите вашу роль в поле для ответа.'
         return reply_text
 
     def _set_children(self) -> List:
@@ -232,10 +233,10 @@ class CompanyCalendarButton(BaseButton):
 
 
 class AddedCompanyMemberButton(BaseButton):
-    """Класс описывающий кнопку - Добавить члена команды"""
+    """Класс описывающий кнопку - 🙋‍♀️ Пригласить участника команды 🙋‍♂️"""
 
     def _set_name(self) -> str:
-        return '🤵 \t Добавить члена команды'
+        return '🙋‍♀️ Пригласить участника команды 🙋‍♂️'
 
     def _set_next_state(self) -> str:
         return 'reset_state'
@@ -245,12 +246,12 @@ class AddedCompanyMemberButton(BaseButton):
 
     async def _set_answer_logic(self, update: Message, state: Optional[FSMContext] = None):
         from ..loader import bot
-        reply_text = (f'{FACE_BOT} <b>Ссылка-приглашение</b>\n\n'
-                      f'Отправьте эту ссылку новому члену команды, при переходе он будет '
-                      f'автоматически добавлен в Вашу команду\n\n'
-                      f'⚠ Время действия ссылки - {INVITE_LINK_LIFE // 60} минут\n\n')
+        reply_text = f'{FACE_BOT} Это ссылка приглашение ✉️\n\n'
         reply_text += create_invite_link(
             bot_username=(await bot.get_me()).username, referrer_id=update.from_user.id)
+        reply_text += (f'\n\nОтправьте ее вашему коллеге или партнеру. Он или она кликнет по '
+                       f'ссылке и попадет ко мне. А я впишу нового человека в вашу команду 🙂\n\n'
+                       f'Внимание: ссылка действует только {INVITE_LINK_LIFE // 60} минут')
         return reply_text, self.next_state
 
 
@@ -258,7 +259,7 @@ class CompanyMenu(BaseButton):
     """Класс описывающий кнопку - Компания"""
 
     def _set_name(self) -> str:
-        return '🏢 \t Компания'
+        return '🏢 \t Моя команда'
 
     def _set_next_state(self) -> str:
         return 'reset_state'
@@ -277,7 +278,7 @@ class CompanyMenu(BaseButton):
             # company_members = [member async for member in user.company.members.all()]
             # for num, member in enumerate(user.company.members.all(), 1):
 
-            reply_text = f'<b>{FACE_BOT} Компания "{user.company.name}"</b>\n\n'
+            reply_text = f'{FACE_BOT} Команда компании <b>"{user.company.name}"</b>\n\n'
             # reply_text += (f"<b>Название:</b> "
             #                f"{user.company.name if user.company.name else ''}\n")
             reply_text += (f"<b>Ваша роль в компании:</b> "
@@ -286,12 +287,13 @@ class CompanyMenu(BaseButton):
                            f"{user.company.about_company if user.company.about_company else ''}\n\n")
             reply_text += (f"<b>О команде:</b> "
                            f"{user.company.about_team if user.company.about_team else ''}\n\n")
-            reply_text += f"<b>Участники:</b>\n"
+            reply_text += f"<b>Участники команды:</b>\n"
             num = 0
             async for member in user.company.members.all():
                 num += 1
                 reply_text += (f"{num}. {member.role_in_company} - "
                                f"{'Вы' if member == user else member.username}\n")
+            reply_text += '\nОткорректируйте, если у вас что-то поменялось 👇'
         return reply_text, self.next_state
 
     def _set_children(self) -> List:

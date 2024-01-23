@@ -31,12 +31,12 @@ class MessageGetContacts(BaseMessage, Utils):
             if email := await utils.data_to_email(update.text):
                 user.email = email
                 await user.asave()
-                add_reply_text = "<b>Адрес электронной почты сохранён</b>"
+                add_reply_text = "Вношу в свой блокнотик, спасибо 🙂"
 
             elif phone_number := await utils.data_to_phone(update.text):
                 user.phone_number = phone_number
                 await user.asave()
-                add_reply_text = "<b>Номер телефона сохранён</b>"
+                add_reply_text = "Вношу в свой блокнотик, спасибо 🙂"
         except Exception as exc:
             self.logger.error(exc)
         return f'{FACE_BOT}{add_reply_text}\n\n{self.reply_text}', self.next_state
@@ -52,7 +52,9 @@ class MessageGetRoleInCompany(BaseMessage, Utils):
         return FSMGreetingScriptStates.get_contacts
 
     def _set_reply_text(self) -> Optional[str]:
-        return f"<b>Ваши контакты (телефон или e-mail)</b>"
+        return (f"Отлично, теперь я знаю вас немного лучше. Это пригодится в нашем общении 🙂\n"
+                f"Теперь введите ваши контакты, и мы перейдем к основной части 🚀\n"
+                f"Укажите номер телефона или email 👇")
 
     async def _set_answer_logic(self, update: Message, state: Optional[FSMContext] = None):
         try:
@@ -64,7 +66,7 @@ class MessageGetRoleInCompany(BaseMessage, Utils):
             else:
                 user.role_in_company = update.text
             await user.asave()
-            add_reply_text = f'<b>Ваша роль в компании "{user.company.name}" сохранена</b>'
+            add_reply_text = f'О, думаю, это очень интересно 😲'
         except Exception as exc:
             self.logger.error(exc)
             add_reply_text = f'<b>⚠ Не удалось сохранить роль в компании</b>'
@@ -85,10 +87,12 @@ class MessageGetAboutCommand(BaseMessage, Utils):
         return FSMGreetingScriptStates.get_role_in_company
 
     def _set_reply_text(self) -> Optional[str]:
-        reply_text = (f'<b>Введите номер, соответствующий Вашей роли в компании '
-                      f'согласно пунктам или введите текстом свой вариант:</b>\n\n')
+        reply_text = (f'Теперь укажите вашу роль в компании. '
+                      f'Просто введите номер:\n\n')
         for num, role in COMPANY_ROLES.items():
             reply_text += f'{num}. {role}\n'
+        reply_text += ('\nЕсли нет подходящего варианта — '
+                       'впишите вашу роль в поле для ответа.')
         return reply_text
 
     async def _set_answer_logic(self, update: Message, state: Optional[FSMContext] = None):
@@ -203,17 +207,17 @@ class MessageGetFullname(BaseMessage, Utils):
             user.surname = surname
             user.patronymic = patronymic
             await user.asave()
-            # if surname and name and patronymic:
-            #     add_reply_text = '<b>Ваши ФИО сохранены</b>'
             if surname and name:
-                add_reply_text = '<b>Ваши имя и фамилия сохранены</b>'
+                add_reply_text = 'Спасибо, я запомню 🙂'
             else:
-                add_reply_text = '<b>Ваше имя сохранено</b>'
+                add_reply_text = 'Спасибо, я запомню 🙂'
             if user.company:
-                reply_text = (f'<b>Введите номер, соответствующий Вашей роли в компании '
-                              f'согласно пунктам или введите текстом свой вариант:</b>\n\n')
+                reply_text = (f'Очень приятно! 😊\nТеперь укажите вашу роль в компании. '
+                              f'Просто введите номер:\n\n')
                 for num, role in COMPANY_ROLES.items():
                     reply_text += f'{num}. {role}\n'
+                reply_text += ('\nЕсли нет подходящего варианта — '
+                               'впишите вашу роль в поле для ответа.')
                 next_state = FSMGreetingScriptStates.get_role_in_company
                 self.children_messages = {message.state_or_key: message
                                           for message in self.message_get_role_in_company}
@@ -232,12 +236,13 @@ class StartGreetingButton(BaseButton):
         return FSMGreetingScriptStates.get_fullname
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + ('Для начала, расскажите немного про себя, свою компанию и команду. '
-                           'Данные о Вас и Вашей компании будут сохранены в профиле и помогут мне,'
-                           'как Ассистенту максимально эффективно работать с Вашими запросами. '
-                           'При необходимости Вы сможете внести изменения в свой профиль.\n\n'
-                           'Как вас зовут? '
-                           '(введите через пробел ваши имя и фамилию в указанном порядке)')
+        return FACE_BOT + ("Давайте знакомиться 😉 "
+                           "\nРасскажите о себе. Есть ли у вас команда, компания, как там "
+                           "идут дела, какие у вас цели? Чем больше я о вас знаю, тем более "
+                           "точечную помощь смогу оказать.\nЯ — надежный собеседник и никому не "
+                           "выдам ваши ответы. Мне интереснее обдумывать их самостоятельно 🙂\n"
+                           "Давайте начнем с имени. Напишите, как вас зовут — Имя, Фамилия. "
+                           "В таком порядке, в именительном падеже.")
 
     def _set_messages(self) -> Dict:
         return {message.state_or_key: message

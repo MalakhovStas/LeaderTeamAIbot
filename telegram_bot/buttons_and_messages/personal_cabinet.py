@@ -33,7 +33,7 @@ class MessageGetNewFIO(BaseMessage, Utils):
                 user.surname = surname
                 user.patronymic = patronymic
                 await user.asave()
-                reply_text = "<b>Данные успешно изменены</b>"
+                reply_text = "Звучит очень красиво 🙂"
                 next_state = 'reset_state'
             else:
                 reply_text = "⚠ Ошибка изменения данных\n<b>Имя не может быть пустым</b>"
@@ -48,8 +48,7 @@ class ChangeFIO(BaseButton, Utils):
         return '✍ Изменить Имя/Фамилию'  # 🔑 🔐 🗝
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + ('<b>Введите через пробел новые '
-                           'имя и фамилию в указанном порядке:</b>')
+        return FACE_BOT + 'Напишите мне, как вас зовут, в порядке: Фамилия Имя Отчество'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -68,7 +67,7 @@ class MessageGetNewNickname(BaseMessage, Utils):
         return 'FSMPersonalCabinetStates:change_username'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>⚠ Не удалось изменить Username</b>'
+        return FACE_BOT + '<b>⚠ Не удалось изменить Telegram-ник</b>'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -80,7 +79,7 @@ class MessageGetNewNickname(BaseMessage, Utils):
             user = await User.objects.filter(tg_accounts__tg_user_id=update.from_user.id).afirst()
             user.username = update.text[:256].split()[0]
             await user.asave()
-            reply_text = "<b>Username успешно изменён</b>"
+            reply_text = "Спасибо, я запомню 🙂"
             next_state = 'reset_state'
         except Exception as exc:
             self.logger.error(exc)
@@ -88,12 +87,12 @@ class MessageGetNewNickname(BaseMessage, Utils):
 
 
 class ChangeUsername(BaseButton, Utils):
-    """Кнопка изменить username"""
+    """Кнопка Изменить Telegram-ник"""
     def _set_name(self) -> str:
-        return '👤 Изменить Username'
+        return '👤 Изменить Telegram-ник'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Введите новый Username</b>'
+        return FACE_BOT + 'Введите ваш новый ник для Telegram'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -125,7 +124,7 @@ class MessageGetNewEmail(BaseMessage, Utils):
             if email := await utils.data_to_email(update.text):
                 user.email = email
                 await user.asave()
-                reply_text = "<b>Адрес электронной почты  успешно изменён</b>"
+                reply_text = "Зафиксировано 😉"
                 next_state = 'reset_state'
             else:
                 reply_text = ("<b>⚠ Ошибка изменения адреса электронной почты\n"
@@ -141,7 +140,7 @@ class ChangeEmail(BaseButton, Utils):
         return '📧 Изменить Email'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Введите Email в формате mail@mail.com</b>'
+        return FACE_BOT + 'Напишите вашу новую электронную почту в формате mail@mail.com'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -173,7 +172,7 @@ class MessageGetNewPhoneNumber(BaseMessage, Utils):
             if phone_number := await utils.data_to_phone(update.text):
                 user.phone_number = phone_number
                 await user.asave()
-                reply_text = "<b>Номер телефона успешно изменён</b>"
+                reply_text = "Класс. Обещаю не названивать в 4 утра 😁"
                 next_state = 'reset_state'
             else:
                 reply_text = ("<b>⚠ Ошибка изменения номера телефона\n"
@@ -189,7 +188,7 @@ class ChangePhoneNumber(BaseButton, Utils):
         return '☎ Изменить номер телефона'
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + '<b>Введите номер телефона в формате 79998887766</b>'
+        return FACE_BOT + 'Введите ваш новый номер телефона в формате 79998887766'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
@@ -203,10 +202,10 @@ class ChangePhoneNumber(BaseButton, Utils):
 
 
 class PersonalCabinet(BaseButton):
-    """Класс описывающий кнопку - Профиль"""
+    """Класс описывающий кнопку - Обо мне"""
 
     def _set_name(self) -> str:
-        return '⚙ \t Профиль'
+        return '⚙ \t Обо мне'
 
     def _set_next_state(self) -> str:
         return 'reset_state'
@@ -215,14 +214,15 @@ class PersonalCabinet(BaseButton):
         user_id = update.from_user.id
         user = await User.objects.filter(
             tg_accounts__tg_user_id=user_id).select_related("company").afirst()
-        reply_text = f"<b>{FACE_BOT}Информация о вашем профиле:</b>\n\n"
+        reply_text = f"{FACE_BOT}То, что вы рассказали мне о себе 🙂\n\n"
         reply_text += f"<b>Имя:</b> {user.name if user.name else ''}\n"
         reply_text += f"<b>Фамилия:</b> {user.surname if user.surname else ''}\n"
         # reply_text += f"<b>Отчество:</b> {user.patronymic if user.patronymic else ''}\n"
-        reply_text += f"<b>Username:</b> {user.username if user.username else ''}\n"
-        reply_text += f"<b>Email:</b> {user.email if user.email else ''}\n"
+        reply_text += f"<b>Telegram-ник:</b> {user.username if user.username else ''}\n"
+        reply_text += f"<b>Электронная почта:</b> {user.email if user.email else ''}\n"
         reply_text += f"<b>Номер телефона:</b> {user.phone_number  if user.phone_number else ''}\n"
         reply_text += f"<b>Компания:</b> {user.company.name if user.company else ''}\n"
+        reply_text += f"\nОткорректируйте, если у вас что-то поменялось 👇"
         return reply_text, self.next_state
 
     def _set_children(self) -> List:
