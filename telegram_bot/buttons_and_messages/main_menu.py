@@ -14,7 +14,7 @@ class AboutBot(BaseButton):
     """Класс описывающий кнопку - О боте"""
 
     def _set_name(self) -> str:
-        return 'ℹ \t О боте'
+        return '🧑‍💻 \t Об ассистенте'
 
     def _set_reply_text(self) -> str:
         return DEFAULT_GREETING

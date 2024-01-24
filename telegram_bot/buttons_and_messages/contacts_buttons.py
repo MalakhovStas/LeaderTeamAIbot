@@ -8,7 +8,8 @@ class SupportButton(BaseButton):
     """Класс описывающий кнопку - Поддержка"""
 
     def _set_name(self) -> str:
-        return '🆘 \t Поддержка'
+        # return '🆘 \t Поддержка'
+        return '🆘 \t Техподдержка'
 
     def _set_reply_text(self) -> Optional[str]:
         return None
@@ -21,7 +22,7 @@ class ContactManagerButton(BaseButton):
     """Класс описывающий кнопку - Связь с менеджером"""
 
     def _set_name(self) -> str:
-        return '🧑‍💻 \t Связаться с менеджером'
+        return '👩‍💼 \t Связаться с менеджером'
 
     def _set_reply_text(self) -> Optional[str]:
         return None

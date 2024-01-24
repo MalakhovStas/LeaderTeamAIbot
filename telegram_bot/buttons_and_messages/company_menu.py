@@ -259,7 +259,7 @@ class CompanyMenu(BaseButton):
     """Класс описывающий кнопку - Компания"""
 
     def _set_name(self) -> str:
-        return '🏢 \t Моя команда'
+        return '🎯 \t Моя команда'
 
     def _set_next_state(self) -> str:
         return 'reset_state'

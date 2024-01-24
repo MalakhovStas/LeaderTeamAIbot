@@ -23,7 +23,8 @@ BOT_NIKNAME = os.getenv('BOT_NIKNAME')
 ADMINS = os.getenv('ADMINS')
 TECH_ADMINS = os.getenv('TECH_ADMINS')
 SUPPORT = os.getenv('SUPPORT')
-FACE_BOT = '🤖 \t '
+# FACE_BOT = '🤖 \t '
+FACE_BOT = '🧑‍💻 \t '
 
 """ Список администраторов и ссылка на чат поддержки и менеджера"""
 ADMINS = os.getenv('ADMINS').split(', ') if os.getenv('ADMINS') else tuple()

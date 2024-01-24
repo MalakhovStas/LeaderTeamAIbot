@@ -205,7 +205,8 @@ class PersonalCabinet(BaseButton):
     """Класс описывающий кнопку - Обо мне"""
 
     def _set_name(self) -> str:
-        return '⚙ \t Обо мне'
+        # return '⚙ \t Обо мне'
+        return '🤝 \t Обо мне'
 
     def _set_next_state(self) -> str:
         return 'reset_state'
