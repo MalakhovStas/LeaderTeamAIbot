@@ -48,7 +48,7 @@ class ChangeFIO(BaseButton, Utils):
         return '✍ Изменить Имя/Фамилию'  # 🔑 🔐 🗝
 
     def _set_reply_text(self) -> Optional[str]:
-        return FACE_BOT + 'Напишите мне, как вас зовут, в порядке: Фамилия Имя Отчество'
+        return FACE_BOT + 'Напишите мне, как вас зовут, в порядке -  Имя Фамилия'
 
     def _set_children(self) -> List:
         return [GoToBack(new=False)]
