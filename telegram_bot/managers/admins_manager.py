@@ -168,57 +168,58 @@ class AdminsManager:
                     )
 
             elif command == '/users_info':
-                wb = openpyxl.Workbook()
-                ws = wb.active
-                ws.append((f'Всего пользователей в боте: {num_users}',))
-                ws.append((f'Активных за 24 часа: {num_users_active_from_24hours}',))
-                ws.append((f'Активных за неделю: {num_users_active_from_week}',))
-                ws.append(('',))
+                try:
+                    wb = openpyxl.Workbook()
+                    ws = wb.active
+                    ws.append((f'Всего пользователей в боте: {num_users}',))
+                    ws.append((f'Активных за 24 часа: {num_users_active_from_24hours}',))
+                    ws.append((f'Активных за неделю: {num_users_active_from_week}',))
+                    ws.append(('',))
 
-                ws.append(('Число месяца  /  новых пользователей',))
-                new_users_in_month = 0
-                for day in range(datetime.now().date().day, 0, -1):
-                    new_users_in_day = await self.dbase.count_users(
-                        register=True,
-                        date=datetime.now().date()-timedelta(days=day - 1)
-                    )
-                    new_users_in_month += new_users_in_day
-                    ws.append((f'{datetime.now().day - day + 1}  /  {new_users_in_day}',))
-                ws.append((f'Всего в этом месяце: {new_users_in_month}',))
-                ws.append(('',))
+                    ws.append(('Число месяца  /  новых пользователей',))
+                    new_users_in_month = 0
+                    for day in range(datetime.now().date().day, 0, -1):
+                        new_users_in_day = await self.dbase.count_users(
+                            register=True,
+                            date=datetime.now().date()-timedelta(days=day - 1)
+                        )
+                        new_users_in_month += new_users_in_day
+                        ws.append((f'{datetime.now().day - day + 1}  /  {new_users_in_day}',))
+                    ws.append((f'Всего в этом месяце: {new_users_in_month}',))
+                    ws.append(('',))
 
-                ws.append((
-                    'Telegram_id', 'Name', 'Username', 'Дата регистрации',
-                    'Дата последнего запроса', 'Текст последнего запроса',
-                    'Всего запросов', 'Бан от пользователя', "Компания", "Роль",
-                    "О компании", "О команде"
-                ))
-                for user in await self.dbase.select_all_contacts_users():
-                    if tg_user_id := user.get("tg_user_id"):
-                        dj_user: User = await (User.objects.filter(
-                            tg_accounts__tg_user_id=tg_user_id).select_related(
-                            "company").afirst())
-                        username = user.get("tg_username")
-                        ws.append((
-                            tg_user_id,
-                            user.get("tg_first_name"),
-                            f'{f"@{username}" if username else ""}',
-                            str(user.get("added_date").strftime('%d.%m.%Y %H:%M:%S')),
-                            str(user.get("date_last_request").strftime('%d.%m.%Y %H:%M:%S')),
-                            user.get("text_last_request"),
-                            user.get("num_requests"),
-                            "бан" if user.get("ban_from_user") else "нет",
-                            dj_user.company.name if dj_user.company else "",
-                            dj_user.role_in_company if dj_user.company else "",
-                            dj_user.company.about_company if dj_user.company else "",
-                            dj_user.company.about_team if dj_user.company else "",
+                    ws.append((
+                        'Telegram_id', 'Name', 'Username', 'Дата регистрации',
+                        'Дата последнего запроса', 'Текст последнего запроса',
+                        'Всего запросов', 'Бан от пользователя', "Компания", "Роль",
+                        "О компании", "О команде"
+                    ))
+                    for user in await self.dbase.select_all_contacts_users():
+                        if tg_user_id := user.get("tg_user_id"):
+                            dj_user: User = await (User.objects.filter(
+                                tg_accounts__tg_user_id=tg_user_id).select_related(
+                                "company").afirst())
+                            username = user.get("tg_username")
+                            ws.append((
+                                tg_user_id,
+                                user.get("tg_first_name"),
+                                f'{f"@{username}" if username else ""}',
+                                str(user.get("added_date").strftime('%d.%m.%Y %H:%M:%S')),
+                                str(user.get("date_last_request").strftime('%d.%m.%Y %H:%M:%S')),
+                                user.get("text_last_request"),
+                                user.get("num_requests"),
+                                "бан" if user.get("ban_from_user") else "нет",
+                                dj_user.company.name if dj_user.company else "",
+                                dj_user.role_in_company if dj_user.company else "",
+                                dj_user.company.about_company if dj_user.company else "",
+                                dj_user.company.about_team if dj_user.company else "",
 
-                        ))
-                wb.save('users_info.xlsx')
-
-                text = open('users_info.xlsx', 'rb')
-                type_result = 'document'
-
+                            ))
+                    wb.save('users_info.xlsx')
+                    text = open('users_info.xlsx', 'rb')
+                    type_result = 'document'
+                except Exception as exc:
+                    self.logger.error(exc)
         return text, next_state, type_result
 
     async def in_password(self, update: Message, current_state: FSMAdminStates) -> Tuple:
