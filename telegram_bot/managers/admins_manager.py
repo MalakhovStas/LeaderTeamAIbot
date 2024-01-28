@@ -209,10 +209,10 @@ class AdminsManager:
                                 user.get("text_last_request"),
                                 user.get("num_requests"),
                                 "бан" if user.get("ban_from_user") else "нет",
-                                dj_user.company.name if dj_user.company else "",
-                                dj_user.role_in_company if dj_user.company else "",
-                                dj_user.company.about_company if dj_user.company else "",
-                                dj_user.company.about_team if dj_user.company else "",
+                                dj_user.company.name if dj_user and dj_user.company else "",
+                                dj_user.role_in_company if dj_user and dj_user.company else "",
+                                dj_user.company.about_company if dj_user and dj_user.company else "",
+                                dj_user.company.about_team if dj_user and dj_user.company else "",
 
                             ))
                     wb.save('users_info.xlsx')
