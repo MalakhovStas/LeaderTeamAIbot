@@ -272,7 +272,6 @@ STATIC_URL = '/static/'
 if DEBUG:
     STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 else:
-    STATICFILES_DIRS = (os.path.join(BASE_DIR.parent, "static"),)
     if BOT_IN_DEV:
         STATIC_ROOT = '/home/Development/static/'
     else:
