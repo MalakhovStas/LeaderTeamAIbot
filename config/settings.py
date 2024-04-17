@@ -41,7 +41,8 @@ load_dotenv(dotenv_path=BASE_DIR.joinpath('env/.env.local'), override=True)
 DEBUG = True
 ALLOWED_HOSTS = ['194.58.96.166', '127.0.0.1', 'localhost']
 CSRF_TRUSTED_ORIGINS = []
-BOT_IN_DEV = True
+PROJECT_IN_DEV = True
+ADMINS_ACCESS_ONLY = False
 
 # Application definition
 INSTALLED_APPS = [
@@ -193,7 +194,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 DATABASE_DATA: dict = json.loads(
-    os.getenv("DATABASE_DEV", default={}) if BOT_IN_DEV else os.getenv("DATABASE", default={})
+    os.getenv("DATABASE_DEV", default={}) if PROJECT_IN_DEV else os.getenv("DATABASE", default={})
 )
 DATABASES = {
     # 'default': {
@@ -211,7 +212,7 @@ DATABASES = {
 }
 
 CACHE_DATA: dict = json.loads(
-    os.getenv("CACHE_DEV", default={}) if BOT_IN_DEV else os.getenv("CACHE", default={})
+    os.getenv("CACHE_DEV", default={}) if PROJECT_IN_DEV else os.getenv("CACHE", default={})
 )
 
 REDIS_CACHE = StrictRedis(
@@ -272,7 +273,7 @@ STATIC_URL = '/static/'
 if DEBUG:
     STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 else:
-    if BOT_IN_DEV:
+    if PROJECT_IN_DEV:
         STATIC_ROOT = '/home/Development/static/'
     else:
         STATIC_ROOT = '/home/static/'

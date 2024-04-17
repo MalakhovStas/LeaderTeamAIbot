@@ -1,18 +1,18 @@
 """Модуль предварительной и постобработки входящих сообщений"""
 from typing import Dict, Optional, List
 
+from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.handler import CancelHandler
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.types import Message, CallbackQuery, Update, ReplyKeyboardRemove
-from aiogram.dispatcher import FSMContext
+from django.conf import settings
 
 from ..config import (
     FLOOD_CONTROL,
     FLOOD_CONTROL_STOP_TIME,
     DEFAULT_GREETING,
     TECH_ADMINS,
-    BOT_IN_DEV,
-    DEFAULT_BOT_IN_DEV_MESSAGE
+    DEFAULT_PROJECT_IN_DEV_MESSAGE
 )
 from ..loader import bot, security, dbase, Base, storage
 from ..utils import exception_control, states
@@ -40,10 +40,10 @@ class AccessControlMiddleware(BaseMiddleware):
         # print(update.message.reply_markup.values.get('inline_keyboard')[0][0].text[-7:])
         # print(Base.general_collection)
 
-        if BOT_IN_DEV and update.from_user.id not in map(int, TECH_ADMINS):
+        if settings.ADMINS_ACCESS_ONLY and update.from_user.id not in map(int, TECH_ADMINS):
             await bot.send_message(
                 chat_id=update.from_user.id,
-                text=DEFAULT_BOT_IN_DEV_MESSAGE,
+                text=DEFAULT_PROJECT_IN_DEV_MESSAGE,
                 reply_markup=ReplyKeyboardRemove()
             )
             raise CancelHandler()
@@ -139,7 +139,7 @@ class AccessControlMiddleware(BaseMiddleware):
     async def on_post_process_callback_query(
             self, call: CallbackQuery, post: List, callback_data: Dict) -> None:
         data = callback_data.get('state')
-        if not call.data in ['UpdateData']:#, 'GoToBack']:
+        if not call.data in ['UpdateData']:  #, 'GoToBack']:
             await data.update_data(previous_button=call.data)
             await Base.button_search_and_action_any_collections(
                 user_id=call.from_user.id, action='add',

@@ -150,9 +150,8 @@ TYPE_PROXI = 'SOCKS5'
 
 DEFAULT_FREE_BALANCE_REQUEST_USER = 1_000_000
 
-BOT_IN_DEV = settings.BOT_IN_DEV
-DEFAULT_BOT_IN_DEV_MESSAGE = ("Приношу свои извинения, в данный момент ведутся "
-                              "технические работы, обратитесь немного позже")
+DEFAULT_PROJECT_IN_DEV_MESSAGE = ("Приношу свои извинения, в данный момент ведутся "
+                                  "технические работы, обратитесь немного позже")
 
 DEFAULT_GREETING = f"""
 {FACE_BOT} Добро пожаловать!
