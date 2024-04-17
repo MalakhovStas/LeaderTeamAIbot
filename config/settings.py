@@ -41,6 +41,7 @@ load_dotenv(dotenv_path=BASE_DIR.joinpath('env/.env.local'), override=True)
 DEBUG = True
 ALLOWED_HOSTS = []
 CSRF_TRUSTED_ORIGINS = []
+BOT_IN_DEV = True
 
 # Application definition
 INSTALLED_APPS = [
@@ -191,7 +192,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-DATABASE_DATA: dict = json.loads(os.getenv("DATABASE", default={}))
+DATABASE_DATA: dict = json.loads(
+    os.getenv("DATABASE_DEV", default={}) if BOT_IN_DEV else os.getenv("DATABASE", default={})
+)
 DATABASES = {
     # 'default': {
     #     'ENGINE': 'django.db.backends.sqlite3',
@@ -207,7 +210,9 @@ DATABASES = {
     }
 }
 
-CACHE_DATA: dict = json.loads(os.getenv("CACHE", default={}))
+CACHE_DATA: dict = json.loads(
+    os.getenv("CACHE_DEV", default={}) if BOT_IN_DEV else os.getenv("CACHE", default={})
+)
 
 REDIS_CACHE = StrictRedis(
     host=CACHE_DATA.get('host'),
