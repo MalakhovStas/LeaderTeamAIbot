@@ -39,7 +39,7 @@ load_dotenv(dotenv_path=BASE_DIR.joinpath('env/.env.local'), override=True)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['194.58.96.166', '127.0.0.1', 'localhost']
 CSRF_TRUSTED_ORIGINS = []
 BOT_IN_DEV = True
 
