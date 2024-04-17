@@ -1,7 +1,15 @@
 import re
 import random
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, Any
 import string
+from datetime import datetime
+
+from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
+from loguru import logger
+from django.utils import timezone
+from django.conf import settings
+from random import choice
+from telegram_bot.config import INVITE_LINK_LIFE
 
 
 def get_fullname(search_query: str) -> Tuple:
@@ -93,3 +101,45 @@ def make_code_tg_register_link():
     length = 32
     dictionary = string.digits + string.ascii_letters
     return "".join(random.sample(dictionary, length))
+
+
+def get_key_from_value_dict(i_dict: dict, value: Any) -> Optional[Any]:
+    """Возвращает ключ словаря по первому соответствующему значению"""
+    for key, val in i_dict.items():
+        if val == value:
+            return key
+
+
+def data_to_datetime(data: str) -> Optional[datetime]:
+    """Преобразует строку data в объект Datetime с часовым поясом из настроек django и
+    возвращает его, если строка соответствует формату 01.01.2024 12:00, иначе возвращает None"""
+    date = None
+    try:
+        date = timezone.make_aware(
+            datetime.strptime(data, settings.GENERAL_DATETIME_FORMAT_FOR_MESSAGE),
+            timezone.get_current_timezone()
+        ).astimezone(timezone.get_current_timezone())
+    except ValueError as exc:
+        logger.debug(f'{exc=} | return -> None')
+    return date
+
+
+def generate_random_string(length: int) -> str:
+    """ Генерирует случайную строку длиной length из
+        символов английского алфавита и цифр"""
+    symbols = string.ascii_letters + string.digits
+    return ''.join(choice(seq=symbols) for _ in range(length))
+
+
+def create_invite_link(bot_username: str, referrer_id: int | str) -> str:
+    """Создаёт и сохраняет в кэш реферальную ссылку с временем жизни==INVITE_LINK_LIFE"""
+    invite_code = generate_random_string(35)
+    settings.REDIS_CACHE.set(name=invite_code, value=referrer_id, ex=INVITE_LINK_LIFE)
+    return f"<a>https://t.me/{bot_username}?start={invite_code}&preview:true</a>"
+
+
+async def create_keyboard(button: Any) -> InlineKeyboardMarkup:
+    """Создаёт клавиатуру из одной кнопки"""
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton(text=button.name, callback_data=button.class_name))
+    return keyboard

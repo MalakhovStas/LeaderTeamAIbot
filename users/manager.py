@@ -1,6 +1,6 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
 
 
 class CustomUserManager(BaseUserManager):
@@ -17,7 +17,8 @@ class CustomUserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_superuser(self, username, password, **extra_fields):
+    @async_to_sync
+    async def create_superuser(self, username, password, **extra_fields):
         """Добавление суперпользователя"""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -27,4 +28,4 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_('The superuser must have is_staff=True.'))
         if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('The superuser must have is_superuser=True.'))
-        return self.create_user(username, password, **extra_fields)
+        return await self.create_user(username, password, **extra_fields)

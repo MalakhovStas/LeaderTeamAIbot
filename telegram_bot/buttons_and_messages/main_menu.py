@@ -38,7 +38,7 @@ class MainMenu(BaseButton):
             # StartGreetingButton(parent_name=self.class_name),
             PersonalCabinet(parent_name=self.class_name),
             CompanyMenu(parent_name=self.class_name),
-            # SevenPetalsSurveyButton(parent_name=self.class_name),
+            SevenPetalsSurveyButton(parent_name=self.class_name),
             QuestionOpenAI(parent_name=self.class_name),
             ContactManagerButton(parent_name=self.class_name),
             AboutBot(parent_name=self.class_name),

@@ -1,9 +1,14 @@
 """Модуль инструментов для взаимодействия с библиотекой и сервисом OpenAI"""
 import asyncio
-from typing import Sequence, Optional, Union, List, Tuple, Dict
+import os
+from typing import Sequence, Optional, Union, List
 
-import openai
 from aiogram.types import CallbackQuery, Message
+from httpx import Client, AsyncClient
+from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletion, ChatCompletionMessage
+from openai.types.chat.chat_completion import Choice
+from openai.types.audio.transcription import Transcription
 
 from ..config import (
     OpenAI_TOKEN,
@@ -12,17 +17,13 @@ from ..config import (
     INVITATION,
     ASSISTANT_PROMPT,
     MODEL,
-    TEMPERATURE,
-    MAX_TOKENS,
-    TOP_P,
-    PRESENCE_PENALTY,
-    FREQUENCY_PENALTY,
     TIMEOUT,
     DEFAULT_FEED_ANSWER,
     DEFAULT_NOT_ENOUGH_BALANCE,
     DEBUG
 )
 from ..models import TelegramAccount
+from ..utils.admins_send_message import func_admins_message
 
 
 class OpenAIManager:
@@ -36,14 +37,39 @@ class OpenAIManager:
         return cls.__instance
 
     def __init__(self, dbase, bot, logger):
-        self.openai = openai
-        self.openai.organization = OpenAI_ORGANIZATION
-        self.openai.api_key = OpenAI_TOKEN
-        self.openai.proxy = OpenAI_PROXY
+
+        self.openai = AsyncOpenAI(
+            api_key=OpenAI_TOKEN,
+            organization=OpenAI_ORGANIZATION,
+            http_client=AsyncClient(proxy=OpenAI_PROXY)
+        )
         self.dbase = dbase
         self.bot = bot
         self.logger = logger
         self.sign = self.__class__.__name__ + ': '
+
+    async def some_question(
+            self,
+            prompt: str,
+            messages_data: Optional[List] = None,
+            user_id: Union[int, str, None] = None,
+            update: Union[CallbackQuery, Message, None] = None) -> Optional[str]:
+        """Основной метод осуществления запросов к ChatGPT"""
+        answer = None
+        if await self._check_type_str(prompt):
+            if MODEL == 'gpt-3.5-turbo':
+                answer = await self.answer_gpt_3_5_turbo(
+                    prompt=prompt,
+                    correct=False,
+                    messages_data=messages_data,
+                    user_id=user_id,
+                    update=update
+                )
+        return answer
+
+    @staticmethod
+    async def _check_type_str(*args) -> bool:
+        return all((isinstance(arg, str) for arg in args))
 
     @staticmethod
     async def prompt_correct(text: str) -> str:
@@ -56,6 +82,7 @@ class OpenAIManager:
 
     async def check_user_balance_requests(
             self, user_id, update: Union[CallbackQuery, Message, None] = None) -> bool:
+        """Проверка доступного баланса пользователей"""
         user = await TelegramAccount.objects.filter(tg_user_id=user_id).afirst()
         if user and user.balance_requests > 0:
             return True
@@ -68,47 +95,6 @@ class OpenAIManager:
                                             f"{user.balance_requests=} | "
                                             f"answer: {DEFAULT_NOT_ENOUGH_BALANCE[:100]}...")
         return False
-
-    async def answer_davinchi(self, prompt: str, correct: bool = True,
-                              user_id: Union[int, str, None] = None,
-                              update: Union[CallbackQuery, Message, None] = None) -> str:
-        """ Запрос к ChatGPT модель: text-davinci-003 """
-        if not await self.check_user_balance_requests(user_id=user_id, update=update):
-            return DEFAULT_NOT_ENOUGH_BALANCE
-
-        prompt = await self.prompt_correct(text=prompt) if correct else prompt
-        if DEBUG:
-            self.logger.info(self.sign + f"question: {prompt[:100]}...")
-        try:
-            response = await asyncio.wait_for(self.openai.Completion.acreate(
-                model=MODEL,
-                prompt=prompt,
-                temperature=TEMPERATURE,
-                max_tokens=MAX_TOKENS,
-                top_p=TOP_P,
-                presence_penalty=PRESENCE_PENALTY,
-                frequency_penalty=FREQUENCY_PENALTY,
-                timeout=TIMEOUT
-            ), timeout=TIMEOUT + 3)
-
-            if response and isinstance(response.get('choices'), Sequence):
-                answer = response['choices'][0]['text'].strip('\n')
-                await self.dbase.update_user_balance_requests(user_id=user_id, down_balance=1)
-            else:
-                answer = self.__default_bad_answer
-
-        except Exception as exception:
-            # from ..utils.admins_send_message import func_admins_message
-            # await func_admins_message(exc=f'{self.sign} {exception=}')
-            if DEBUG:
-                self.logger.warning(self.sign + f"{exception=}")
-            # TODO Убрать сообщение об исключении пользователю
-            answer = self.__default_bad_answer
-
-        text = answer.replace('\n', '')
-        if DEBUG:
-            self.logger.info(self.sign + f"answer: {text[:100]}...")
-        return answer
 
     async def answer_gpt_3_5_turbo(
             self,
@@ -133,19 +119,18 @@ class OpenAIManager:
         messages_data.append({"role": "user", "content": prompt})
 
         try:
-            # print(MODEL)
-            # print(messages_data)
-            # print(self.openai.organization)
-            # print(self.openai.api_key)
-            # print(messages_data)
-            response = await asyncio.wait_for(self.openai.ChatCompletion.acreate(
+            response = await asyncio.wait_for(self.openai.chat.completions.create(
                 model=MODEL,
                 messages=messages_data,
                 timeout=TIMEOUT
             ), timeout=TIMEOUT + 3)
 
-            if response and isinstance(response.get('choices'), Sequence):
-                answer = response['choices'][0]['message']['content'].strip('\n')
+            if (response
+                    and isinstance(response, ChatCompletion)
+                    and isinstance(response.choices[0], Choice)
+                    and isinstance(response.choices[0].message, ChatCompletionMessage)
+            ):
+                answer = response.choices[0].message.content.strip('\n')
                 messages_data.append({"role": "assistant", "content": answer})
                 await self.dbase.update_user_balance_requests(user_id=user_id, down_balance=1)
             else:
@@ -153,7 +138,7 @@ class OpenAIManager:
                 answer = self.__default_bad_answer
 
         except Exception as exception:
-            # await func_admins_message(exc=f'{self.sign} {exception=}')
+            await func_admins_message(exc=f'{self.sign} {exception=}')
             if DEBUG:
                 self.logger.warning(self.sign + f"{exception=}")
             answer = self.__default_bad_answer
@@ -163,94 +148,19 @@ class OpenAIManager:
             self.logger.info(self.sign + f"answer: {text[:100]}...")
         return answer
 
-    async def generate_image_from_text(self, prompt):
-        """ Сгенерированные изображения могут иметь размер 256x256, 512x512 или 1024x1024 пикселей.
-        Меньшие размеры генерируются быстрее. Вы можете запросить от 1 до 10 изображений за раз,
-        используя параметр n """
-
-        response = await openai.Image.acreate(
-            prompt=prompt,
-            n=1,
-            size="1024x1024"
-        )
-        image_url = response['data'][0]['url']
-        return image_url
-
-    @classmethod
-    async def _check_type_str(cls, *args) -> bool:
-        return all((isinstance(arg, str) for arg in args))
-
-    async def reply_feedback(
-            self,
-            feedback: str,
-            feed_name: Optional[str] = None,
-            user_id: Union[int, str, None] = None,
-            update: Union[CallbackQuery, Message, None] = None) -> Union[Tuple, str]:
-        answer = None
-        if await self._check_type_str(feedback):
-            if MODEL == 'gpt-3.5-turbo':
-                answer = await self.answer_gpt_3_5_turbo(
-                    prompt=feedback, user_id=user_id, update=update)
-            else:
-                answer = await self.answer_davinchi(
-                    prompt=feedback, user_id=user_id, update=update)
-
-        if feed_name:
-            return feed_name, answer
-        else:
-            return answer
-
-    async def some_question(
-            self,
-            prompt: str,
-            messages_data: Optional[List] = None,
-            user_id: Union[int, str, None] = None,
-            update: Union[CallbackQuery, Message, None] = None) -> str:
-
-        if await self._check_type_str(prompt):
-            if MODEL == 'gpt-3.5-turbo':
-                answer = await self.answer_gpt_3_5_turbo(
-                    prompt=prompt,
-                    correct=False,
-                    messages_data=messages_data,
-                    user_id=user_id,
-                    update=update
-                )
-            else:
-                answer = await self.answer_davinchi(
-                    prompt=prompt, correct=False, user_id=user_id, update=update)
-            return answer
-
-    async def automatic_generate_answer_for_many_feeds(
-            self, feedbacks: Dict, user_id: Union[int, str, None] = None) -> Dict:
-        # TODO настроить проверку баланса
-        data = [self.reply_feedback(
-            feedback=feed_data.get('text'), feed_name=feed_name, user_id=user_id)
-            for feed_name, feed_data in feedbacks.items()]
-
-        list_result = await asyncio.gather(*data)
-        await asyncio.sleep(0.1)
-        [feedbacks.get(feed_name).update({'answer': answer}) for feed_name, answer in list_result]
-
-        return feedbacks
-
-# Так выглядит ответ
-# {
-#   "choices": [
-#     {
-#       "finish_reason": "stop",
-#       "index": 0,
-#       "logprobs": null,
-#       "text": "Тут текст ответа"
-#     }
-#   ],
-#   "created": 1679239442,
-#   "id": "cmpl-6vpB47cqEu53oWtRauBAbZ5IVK2cS",
-#   "model": "text-davinci-003",
-#   "object": "text_completion",
-#   "usage": {
-#     "completion_tokens": 270,
-#     "prompt_tokens": 134,
-#     "total_tokens": 404
-#   }
-# }
+    async def speech_to_text(self, file) -> str:
+        """Транскрибирует голосовое сообщение или звуковой файл в естественный текст"""
+        result = 'transcription error'
+        try:
+            audio = open(file, 'rb')
+            transcription: Transcription = await asyncio.wait_for(
+                self.openai.audio.transcriptions.create(model="whisper-1", file=audio),
+                timeout=TIMEOUT + 3
+            )
+            os.remove(file)
+            result = transcription.text.strip()
+        except Exception as exception:
+            await func_admins_message(exc=f'{self.sign} {result=} {exception=}')
+            if DEBUG:
+                self.logger.warning(f'{self.sign} {result=} {exception=}')
+        return result

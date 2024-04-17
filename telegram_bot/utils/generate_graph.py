@@ -1,26 +1,13 @@
 """Модуль инструментов для генерации графиков"""
 
 import numpy
-from aiogram.types import InputFile
 from django.conf import settings
 from matplotlib import pyplot
 
 from psychological_testing.models import SevenPetals
 
 
-async def delete_prev_message_and_send_graph(tg_user_id, graph_filename):
-    """Удаляет последнее сообщение от бота пользователю и отправляет ему график"""
-    from ..loader import bot, Base
-    from telegram_bot.handlers.handlers import delete_message
-
-    if last_message_id := await Base.button_search_and_action_any_collections(
-            user_id=tg_user_id, action='get',
-            button_name='last_handler_sent_message_id', updates_data=True):
-        await delete_message(chat_id=tg_user_id, message_id=last_message_id)
-    await bot.send_photo(chat_id=tg_user_id, photo=InputFile(graph_filename))
-
-
-async def seven_petals_generate_graph(tg_user_id, seven_petals: SevenPetals):
+async def seven_petals_generate_graph(tg_user_id: int, seven_petals: SevenPetals) -> str:
     """Функция для генерации, сохранения и отправки пользователю
     графика на основе опроса 'Семь лепестков'"""
 
@@ -64,7 +51,7 @@ async def seven_petals_generate_graph(tg_user_id, seven_petals: SevenPetals):
     ax.set_yticklabels([])
 
     # Сохранение и отправка графика
-    filename = settings.MEDIA_ROOT + f'/tg_id:{tg_user_id}_seven_petals_graph.png'
-    pyplot.savefig(filename)
+    filename = f'users_tests_graphs/tg_id:{tg_user_id}_seven_petals_graph.png'
+    pyplot.savefig(f'{settings.MEDIA_ROOT}/{filename}')
     pyplot.close()
-    await delete_prev_message_and_send_graph(tg_user_id=tg_user_id, graph_filename=filename)
+    return filename

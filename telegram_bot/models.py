@@ -4,9 +4,10 @@ from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 from django.contrib.auth import get_user_model
 from .config import DEFAULT_FREE_BALANCE_REQUEST_USER
+from config.models.base_model import BaseModel
 
 
-class TelegramAccount(models.Model):
+class TelegramAccount(BaseModel):
     """Модель хранения данных Телеграм аккаунта"""
     user = models.ForeignKey(to=get_user_model(), on_delete=models.CASCADE, null=True, blank=True,
                              related_name='tg_accounts', verbose_name=_('user'))
@@ -71,14 +72,11 @@ class TelegramAccount(models.Model):
                                   blank=True, default=0, verbose_name=_('balance'))
     subscription = models.DateTimeField(null=True, blank=True, verbose_name=_('subscription'))
 
-    added_date = models.DateTimeField(auto_now_add=True, verbose_name=_('added date'))
-    modification_date = models.DateTimeField(auto_now=True, verbose_name=_('modification date'))
-
     class Meta:
         """Класс, определяющий некоторые параметры модели."""
         verbose_name = _('telegram account')
         verbose_name_plural = _('telegram accounts')
-        ordering = ['-added_date']
+        ordering = ['-created_at']
 
     def __repr__(self):
         """Переопределение __repr__, для отображения id и username в названии объекта."""

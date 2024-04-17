@@ -2,6 +2,7 @@
 from typing import Optional, List, Dict
 
 from aiogram.dispatcher import FSMContext
+from aiogram.types import InputFile
 from aiogram.types import Message
 
 from psychological_testing.models import SevenPetals
@@ -10,12 +11,14 @@ from .base_classes import BaseButton, BaseMessage
 from .openai_menu import QuestionOpenAI
 from ..config import FACE_BOT
 from ..utils.generate_graph import seven_petals_generate_graph
-from ..utils.misc_utils import check_data
+# from ..utils.misc_utils import check_data
 from ..utils.states import FSMSevenPetalsStates
+from utils import utils
 
 
 class MessageGetOpenQuestionsIrritation(BaseMessage):
     """Сообщение при изменении информации о команде"""
+
     def _set_state_or_key(self) -> str:
         return 'FSMSevenPetalsStates:open_questions_irritation'
 
@@ -37,17 +40,22 @@ class MessageGetOpenQuestionsIrritation(BaseMessage):
                 user.seven_petals = await SevenPetals.objects.acreate()
                 await user.asave()
 
-            user.seven_petals.optimism = round(state_data.get("optimism", 0)/3, 1)
-            user.seven_petals.stream = round(state_data.get("stream", 0)/3, 1)
-            user.seven_petals.sense = round(state_data.get("sense", 0)/3, 1)
-            user.seven_petals.love = round(state_data.get("love", 0)/3, 1)
-            user.seven_petals.play = round(state_data.get("play", 0)/3, 1)
-            user.seven_petals.study = round(state_data.get("study", 0)/3, 1)
-            user.seven_petals.impact = round(state_data.get("impact", 0)/3, 1)
+            user.seven_petals.optimism = round(state_data.get("optimism", 0) / 3, 1)
+            user.seven_petals.stream = round(state_data.get("stream", 0) / 3, 1)
+            user.seven_petals.sense = round(state_data.get("sense", 0) / 3, 1)
+            user.seven_petals.love = round(state_data.get("love", 0) / 3, 1)
+            user.seven_petals.play = round(state_data.get("play", 0) / 3, 1)
+            user.seven_petals.study = round(state_data.get("study", 0) / 3, 1)
+            user.seven_petals.impact = round(state_data.get("impact", 0) / 3, 1)
             user.seven_petals.general_questions = state_data.get("general_questions", 0)
             user.seven_petals.open_questions_pleasure = state_data.get("open_questions_pleasure")
             user.seven_petals.open_questions_irritation = state_data.get(
                 "open_questions_irritation")
+            await user.seven_petals.asave()
+
+            graph_path = await seven_petals_generate_graph(tg_user_id=update.from_user.id,
+                                                           seven_petals=user.seven_petals)
+            user.seven_petals.graph = graph_path
             await user.seven_petals.asave()
 
             seven_petals_button = SevenPetalsSurveyButton(new=False)
@@ -61,6 +69,7 @@ class MessageGetOpenQuestionsIrritation(BaseMessage):
 
 class MessageGetOpenQuestionsPleasure(BaseMessage):
     """Сообщение при изменении информации о команде"""
+
     def _set_state_or_key(self) -> str:
         return 'FSMSevenPetalsStates:open_questions_pleasure'
 
@@ -88,6 +97,7 @@ class MessageGetOpenQuestionsPleasure(BaseMessage):
 
 class MessageGetGeneralQuestionsHappyInWork(BaseMessage):
     """Сообщение при изменении информации о команде"""
+
     def _set_state_or_key(self) -> str:
         return 'FSMSevenPetalsStates:general_questions_happy_in_work'
 
@@ -101,7 +111,7 @@ class MessageGetGeneralQuestionsHappyInWork(BaseMessage):
         reply_text, next_state = self.reply_text, self.next_state
         state_data = await state.get_data()
         try:
-            num = int(await check_data(update.text) or 0)
+            num = int(await utils.data_to_str_digits(update.text) or 0)
             if num < 1 or num > 10:
                 reply_text = ("⚠ Оценка должна находится в указанном диапазоне\n\n"
                               "<b>Насколько вы в настоящее время счастливы в своей работе? "
@@ -124,6 +134,7 @@ class MessageGetGeneralQuestionsHappyInWork(BaseMessage):
 
 class MessageGetGeneralQuestionsHappyMan(BaseMessage):
     """Сообщение при изменении информации о команде"""
+
     def _set_state_or_key(self) -> str:
         return 'FSMSevenPetalsStates:general_questions_happy_man'
 
@@ -136,7 +147,7 @@ class MessageGetGeneralQuestionsHappyMan(BaseMessage):
     async def _set_answer_logic(self, update: Message, state: Optional[FSMContext] = None):
         reply_text, next_state = self.reply_text, self.next_state
         try:
-            num = int(await check_data(update.text) or 0)
+            num = int(await utils.data_to_str_digits(update.text) or 0)
             if num < 1 or num > 10:
                 reply_text = ("⚠ Оценка должна находится в указанном диапазоне\n\n"
                               "<b>Насколько вы счастливый человек? "
@@ -338,8 +349,8 @@ class VeryRarelyButton(SevenPetalsGeneralLogic, BaseButton):
 
     def _set_name(self) -> str:
         return 'Очень редко'
-    
-    
+
+
 class RarelyButton(SevenPetalsGeneralLogic, BaseButton):
     """Класс описывающий кнопку - 'Редко'"""
     score = 3.334
@@ -399,7 +410,6 @@ class SevenPetalsNewSurveyButton(BaseButton):
                            'пробую разные способы достижения цели</b>')
 
     def _set_children(self) -> List:
-
         return [
             PracticallyNeverButton(parent_name=self.class_name),
             VeryRarelyButton(parent_name=self.class_name),
@@ -424,6 +434,18 @@ class SevenPetalsSurveyButton(BaseButton):
     def _set_reply_text(self) -> Optional[str]:
         return self.default_error
 
+    async def delete_prev_message_and_send_graph(
+            self, tg_user_id: int, graph_filename: str) -> None:
+        """Удаляет последнее сообщение от бота пользователю и отправляет ему график"""
+        from telegram_bot.handlers.handlers import delete_message
+
+        if last_message_id := await self.button_search_and_action_any_collections(
+                user_id=tg_user_id, action='get',
+                button_name='last_handler_sent_message_id', updates_data=True):
+            await delete_message(chat_id=tg_user_id, message_id=last_message_id)
+
+        await self.bot.send_photo(chat_id=tg_user_id, photo=InputFile(graph_filename))
+
     async def _set_answer_logic(self, update: Message, state: Optional[FSMContext] = None):
         reply_text, next_state = self.reply_text, self.next_state
         try:
@@ -432,8 +454,8 @@ class SevenPetalsSurveyButton(BaseButton):
             if not user.seven_petals:
                 reply_text = "<b>Чтобы получить результаты необходимо пройти опрос</b>"
             else:
-                await seven_petals_generate_graph(tg_user_id=update.from_user.id,
-                                                  seven_petals=user.seven_petals)
+                await self.delete_prev_message_and_send_graph(
+                    tg_user_id=update.from_user.id, graph_filename=user.seven_petals.graph.path)
 
                 reply_text = (f"{FACE_BOT}<b>Результат опроса:</b>\n\n"
                               f"<b>Оптимизм</b> - {user.seven_petals.optimism}\n"

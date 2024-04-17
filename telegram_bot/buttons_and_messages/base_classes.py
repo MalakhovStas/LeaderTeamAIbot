@@ -41,7 +41,7 @@ class Base(ABC):
     general_collection_dump = dict()
 
     def log(self, message, level: Optional[str] = None):
-        text = f'class: {self.__class__.__name__}: ' + message
+        text = f'class: {self.__class__.__name__}: {message}'
 
         level = 'debug' if not level else level
 

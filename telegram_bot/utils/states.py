@@ -36,6 +36,16 @@ class FSMCompanyMenuStates(StatesGroup):
     change_about_company = State()
     change_about_team = State()
 
+    add_calendar_event_title = State()
+    add_calendar_event_description = State()
+    add_calendar_event_date = State()
+    add_calendar_event_reminder = State()
+
+    delete_calendar_event = State()
+
+    add_reminder_calendar_event_id = State()
+    add_reminder_calendar_event_interval = State()
+
 
 class FSMSevenPetalsStates(StatesGroup):
     """Состояния пользователя в сценарии опроса 'Семь лепестков'

@@ -1,10 +1,12 @@
+from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message, ParseMode
 from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageCantBeDeleted, \
     MessageToEditNotFound, MessageCantBeEdited
-from ..utils.exception_control import exception_handler_wrapper
-from ..loader import dp, bot, alm, logger, Base
+
 from ..config import DEBUG
+from ..loader import dp, bot, alm, logger, Base
+from ..utils.exception_control import exception_handler_wrapper
 
 
 async def delete_message(chat_id, message_id) -> bool:
@@ -37,12 +39,12 @@ async def sending_message(user_id, reply_text, keyboard, disable_w_p_p) -> Messa
         for num_part in range(0, len(reply_text), 4000):
             await bot.send_message(
                 chat_id=user_id,
-                text=reply_text[num_part:num_part+4000],
+                text=reply_text[num_part:num_part + 4000],
                 disable_web_page_preview=disable_w_p_p
             )
         sent_message = await bot.send_message(
             chat_id=user_id,
-            text='-'*60,
+            text='-' * 60,
             reply_markup=keyboard,
             disable_web_page_preview=disable_w_p_p
         )
@@ -58,10 +60,15 @@ async def sending_message(user_id, reply_text, keyboard, disable_w_p_p) -> Messa
     return sent_message
 
 
-@dp.message_handler(state='*')
+@dp.message_handler(state='*', content_types=[
+    types.ContentType.TEXT,
+    types.ContentType.VOICE,
+    types.ContentType.AUDIO,
+])
 @exception_handler_wrapper
 async def get_message_handler(message: Message, state: FSMContext) -> None:
     """ Обработчик входящих сообщений """
+    user_id = message.from_user.id
     reply_text, keyboard, next_state = await alm.get_reply(update=message, state=state)
     disable_w_p_p = False if reply_text in [] else True
 
@@ -86,7 +93,7 @@ async def get_message_handler(message: Message, state: FSMContext) -> None:
         bot.parse_mode = None
 
     sent_message = await sending_message(
-        user_id=message.from_user.id,
+        user_id=user_id,
         reply_text=reply_text,
         keyboard=keyboard,
         disable_w_p_p=disable_w_p_p
@@ -94,12 +101,14 @@ async def get_message_handler(message: Message, state: FSMContext) -> None:
 
     bot.parse_mode = ParseMode.HTML
 
-    await state.update_data(last_handler_sent_message_id=sent_message.message_id,
-                            last_handler_sent_from_message_message_id=sent_message.message_id)
+    await state.update_data(
+        last_handler_sent_message_id=sent_message.message_id,
+        last_handler_sent_from_message_message_id=sent_message.message_id
+    )
 
     # Base.updates_data['last_handler_sent_message_id'] = sent_message.message_id
     await Base.button_search_and_action_any_collections(
-        user_id=message.from_user.id,
+        user_id=user_id,
         action='add',
         button_name='last_handler_sent_message_id',
         updates_data=True,
@@ -107,7 +116,7 @@ async def get_message_handler(message: Message, state: FSMContext) -> None:
     )
     # Base.updates_data['last_handler_sent_from_message_message_id'] = sent_message.message_id
     await Base.button_search_and_action_any_collections(
-        user_id=message.from_user.id,
+        user_id=user_id,
         action='add',
         button_name='last_handler_sent_from_message_message_id',
         updates_data=True,
@@ -119,9 +128,10 @@ async def get_message_handler(message: Message, state: FSMContext) -> None:
             else await state.reset_state()
 
         await Base.button_search_and_action_any_collections(
-            user_id=message.from_user.id,
+            user_id=user_id,
             action='add',
-            button_name='state', updates_data=True,
+            button_name='state',
+            updates_data=True,
             instance_button=next_state if next_state != 'reset_state' else None
         )
 
@@ -130,6 +140,7 @@ async def get_message_handler(message: Message, state: FSMContext) -> None:
 @exception_handler_wrapper
 async def get_call_handler(call: CallbackQuery, state: FSMContext) -> None:
     """ Обработчик обратного вызова со всех клавиатур"""
+    user_id = call.from_user.id
     reply_text, keyboard, next_state = await alm.get_reply(update=call, state=state)
     disable_w_p_p = False if call.data == 'TopUpBalance' else True
 
@@ -138,7 +149,7 @@ async def get_call_handler(call: CallbackQuery, state: FSMContext) -> None:
         'SubmitForRevisionTaskResponseManually',
         'RegenerateAIResponse']) or (
             call.data in ['QuestionOpenAI'] and await state.get_state() in [
-            'FSMSevenPetalsStates:start_survey', 'FSMSevenPetalsStates:end_survey']):
+        'FSMSevenPetalsStates:start_survey', 'FSMSevenPetalsStates:end_survey']):
         await edit_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     else:
         await delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
@@ -148,11 +159,12 @@ async def get_call_handler(call: CallbackQuery, state: FSMContext) -> None:
         bot.parse_mode = None
 
     sent_message = await sending_message(
-        user_id=call.from_user.id,
+        user_id=user_id,
         reply_text=reply_text,
         keyboard=keyboard,
         disable_w_p_p=disable_w_p_p
     )
+
     bot.parse_mode = ParseMode.HTML
 
     await state.update_data(
@@ -162,7 +174,7 @@ async def get_call_handler(call: CallbackQuery, state: FSMContext) -> None:
 
     # Base.updates_data['last_handler_sent_message_id'] = sent_message.message_id
     await Base.button_search_and_action_any_collections(
-        user_id=call.from_user.id,
+        user_id=user_id,
         action='add',
         button_name='last_handler_sent_message_id',
         updates_data=True,
@@ -170,7 +182,7 @@ async def get_call_handler(call: CallbackQuery, state: FSMContext) -> None:
     )
     # Base.updates_data['last_handler_sent_from_call_message_id'] = sent_message.message_id
     await Base.button_search_and_action_any_collections(
-        user_id=call.from_user.id,
+        user_id=user_id,
         action='add',
         button_name='last_handler_sent_from_call_message_id',
         updates_data=True,
@@ -182,7 +194,7 @@ async def get_call_handler(call: CallbackQuery, state: FSMContext) -> None:
             else await state.reset_state()
 
         await Base.button_search_and_action_any_collections(
-            user_id=call.from_user.id,
+            user_id=user_id,
             action='add',
             button_name='state',
             updates_data=True,

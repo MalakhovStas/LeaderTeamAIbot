@@ -10,6 +10,9 @@ from ..utils.states import FSMMainMenuStates
 from users.models import User
 from .contacts_buttons import ContactManagerButton
 
+from aiogram import types
+from pathlib import Path, PosixPath
+
 
 class RegenerateAIResponse(BaseButton):
 
@@ -107,7 +110,23 @@ class MessageOnceForQuestionOpenAIButton(BaseMessage):
         ]
         reply_text = self.default_i_generate_text
         user_id = update.from_user.id
-        task_to_generate_ai = update.text.strip()
+
+
+        if update.content_type == types.ContentType.VOICE:
+            file_id = update.voice.file_id
+        elif update.content_type == types.ContentType.AUDIO:
+            file_id = update.audio.file_id
+        else:
+            file_id = None
+
+        if file_id:
+            file = await self.bot.get_file(file_id=file_id)
+            file_on_disc = Path('media', f'{file_id}.wav')
+            await self.bot.download_file(file_path=file.file_path, destination=file_on_disc)
+            task_to_generate_ai = await self.ai.speech_to_text(file=file_on_disc)
+        else:
+            task_to_generate_ai = update.text.strip()
+
         wait_msg = await self.bot.send_message(chat_id=user_id, text=self.default_generate_answer)
 
         # возвращает сохраненный контекст

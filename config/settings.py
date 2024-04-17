@@ -52,14 +52,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_celery_results',
+    'django_celery_beat',
     'celery_progress',
     'corsheaders',
     'django_jinja',
     'phonenumber_field',
-    'users',
-    'company',
-    'psychological_testing',
-    'telegram_bot',
+    'users.apps.UsersConfig',
+    'company.apps.CompanyConfig',
+    'psychological_testing.apps.PsychologicalTestingConfig',
+    'telegram_bot.apps.TelegramBotConfig',
 ]
 
 MIDDLEWARE = [
@@ -261,9 +262,9 @@ LANGUAGES = [
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 STATIC_URL = '/static/'
-# STATICFILES_DIRS = (
-    # os.path.join(BASE_DIR, "static"),
-# )
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static"),
+)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -321,13 +322,13 @@ LOGS_RETENTION = 1
 # Вывод логов сelery_workers в консоль
 STDOUT_STDERR_WORKERS_TO_CONTROLLER = True
 # Интервал запуска задачи в секундах
-TASK_INTERVAL = 10
+TASK_INTERVAL = 60
 # максимальный уровень приоритетов
 X_MAX_PRIORITY = 10
 
-# Словарь с данными проекта из pyproject.toml
-with open('pyproject.toml', 'r', encoding="utf-8") as file:
-    PYPROJECT = parser.load(file)
+APP_CONFIG = {'periodic_tasks_workers': []}
+
+GENERAL_DATETIME_FORMAT_FOR_MESSAGE = "%d.%m.%Y %H:%M"
 
 # переназначает переменные, используется в продакшн
 from . import production  # noqa F401,E402

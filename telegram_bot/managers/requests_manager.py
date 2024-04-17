@@ -5,7 +5,6 @@ from typing import Iterable, Generator, Optional, Dict, Union, List, Tuple
 
 import aiofiles
 import aiohttp
-import requests
 from aiohttp_proxy import ProxyConnector, ProxyType
 
 from ..config import USE_PROXI, PROXI_FILE, TYPE_PROXI, RM_TIMEOUT, DEBUG
@@ -262,13 +261,14 @@ class RequestsManager:
                 yield chunk
                 chunk = await file.read(chunk_size)
 
-    @staticmethod
-    def sync_file_sender(user_id: str, file_path: str) -> None:
-        """
-        Для отправки файлов телеграм пользователю при помощи синхронной библиотеки requests
-        file_path (str): путь к файлу
-        """
-        from ..config import BOT_TOKEN
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument?chat_id={user_id}"
-        with open(file_path, 'rb') as file:
-            requests.post(url=url, files={'document': file})
+    # @staticmethod
+    # def sync_file_sender(user_id: str, file_path: str) -> None:
+    #     """
+    #     Для отправки файлов телеграм пользователю при помощи синхронной библиотеки requests
+    #     file_path (str): путь к файлу
+    #     """
+    #     import requests
+    #     from ..config import BOT_TOKEN
+    #     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument?chat_id={user_id}"
+    #     with open(file_path, 'rb') as file:
+    #         requests.post(url=url, files={'document': file})

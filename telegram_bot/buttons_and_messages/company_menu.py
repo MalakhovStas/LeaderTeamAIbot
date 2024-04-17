@@ -4,13 +4,13 @@ from typing import List, Optional, Dict
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from users.models import User
-from ..config import FACE_BOT, COMPANY_ROLES, INVITE_LINK_LIFE
-from .base_classes import Utils, BaseButton, BaseMessage, GoToBack
-from ..utils.states import FSMCompanyMenuStates
 from company.models import Company
+from users.models import User
 from utils import utils
-from ..utils.misc_utils import create_invite_link
+from .base_classes import Utils, BaseButton, BaseMessage, GoToBack
+from .calendar_menu import CompanyCalendarButton
+from ..config import FACE_BOT, COMPANY_ROLES, INVITE_LINK_LIFE
+from ..utils.states import FSMCompanyMenuStates
 
 
 class MessageChangeAboutTeam(BaseMessage, Utils):
@@ -212,26 +212,6 @@ class RegisterCompany(BaseButton, Utils):
         return {message.state_or_key: message for message in messages}
 
 
-class CompanyCalendarButton(BaseButton):
-    """Класс описывающий кнопку - Календарь команды"""
-
-    def _set_name(self) -> str:
-        return '📆 \t Календарь команды'
-
-    def _set_next_state(self) -> str:
-        return 'reset_state'
-
-    def _set_children(self) -> List:
-        return [GoToBack(new=False)]
-
-    async def _set_answer_logic(self, update: Message, state: Optional[FSMContext] = None):
-        user = await User.objects.filter(
-            tg_accounts__tg_user_id=update.from_user.id).select_related("company").afirst()
-        reply_text = f'<b>{FACE_BOT} Календарь команды, компании "{user.company.name}"</b>\n\n'
-        reply_text += user.company.calendar or 'нет данных'
-        return reply_text, self.next_state
-
-
 class AddedCompanyMemberButton(BaseButton):
     """Класс описывающий кнопку - 🙋‍♀️ Пригласить участника команды 🙋‍♂️"""
 
@@ -247,7 +227,7 @@ class AddedCompanyMemberButton(BaseButton):
     async def _set_answer_logic(self, update: Message, state: Optional[FSMContext] = None):
         from ..loader import bot
         reply_text = f'{FACE_BOT} Это ссылка приглашение ✉️\n\n'
-        reply_text += create_invite_link(
+        reply_text += utils.create_invite_link(
             bot_username=(await bot.get_me()).username, referrer_id=update.from_user.id)
         reply_text += (f'\n\nОтправьте ее вашему коллеге или партнеру. Он или она кликнет по '
                        f'ссылке и попадет ко мне. А я впишу нового человека в вашу команду 🙂\n\n'
@@ -273,14 +253,7 @@ class CompanyMenu(BaseButton):
 
         else:
             self.children_buttons = self._set_children()
-            # from asgiref.sync import sync_to_async
-            # company_members = await sync_to_async(list)(user.company.members.all())
-            # company_members = [member async for member in user.company.members.all()]
-            # for num, member in enumerate(user.company.members.all(), 1):
-
             reply_text = f'{FACE_BOT} Команда компании <b>"{user.company.name}"</b>\n\n'
-            # reply_text += (f"<b>Название:</b> "
-            #                f"{user.company.name if user.company.name else ''}\n")
             reply_text += (f"<b>Ваша роль в компании:</b> "
                            f"{user.role_in_company if user.role_in_company else ''}\n\n")
             reply_text += (f"<b>О компании:</b> "
@@ -298,9 +271,15 @@ class CompanyMenu(BaseButton):
 
     def _set_children(self) -> List:
         return [
-            # CompanyCalendarButton(parent_name=self.class_name),
+            CompanyCalendarButton(parent_name=self.class_name),
             AddedCompanyMemberButton(parent_name=self.class_name),
             ChangeRoleInCompany(parent_name=self.class_name),
             ChangeAboutCompany(parent_name=self.class_name),
             ChangeAboutTeam(parent_name=self.class_name),
         ]
+
+# TODO 7.Реализовать механизм сбора отзывов и предложений по практикам и развитиям сервиса
+# (по средствам заполнения простейшей формы обратной связи) данная ин6формация должна
+# аккумулироваться в разработанной СУБД. Полученная информация предоставляется администратору
+# по средствам административного сервиса.
+# Следующим этапом выложить всё на сервер и дать доступ иванову.

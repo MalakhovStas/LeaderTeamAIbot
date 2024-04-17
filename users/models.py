@@ -32,7 +32,7 @@ class User(AbstractUser):
 
     company = models.ForeignKey(
         to=Company,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='members',
@@ -42,13 +42,16 @@ class User(AbstractUser):
 
     seven_petals = models.OneToOneField(
         to=SevenPetals,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='user',
         verbose_name=_('seven_petals'))
 
-    modification_date = models.DateTimeField(auto_now=True, verbose_name=_('modification date'))
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_('updated date')
+    )
 
     ai_dialog = models.TextField(null=False, blank=True, default='', verbose_name=_('ai dialog'))
     USERNAME_FIELD = 'username'
