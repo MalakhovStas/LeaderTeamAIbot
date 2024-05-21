@@ -413,4 +413,4 @@ COMPANY_ROLES = {
 }
 
 # переназначает переменные, используется в продакшн
-from . import production  # noqa F401,E402
+from . import production_settings  # noqa F401,E402

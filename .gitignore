@@ -163,3 +163,5 @@ logs
 
 *.xlsx
 *.xls
+
+config/production_settings.py
