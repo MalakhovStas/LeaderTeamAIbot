@@ -3,10 +3,11 @@ from typing import Any, Optional, List, Union, Tuple
 
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-
-from ..buttons_and_messages.main_menu import MainMenu
 from django.conf import settings
+
+from core.utils.i18n import I18N
 from users.models import User
+from ..buttons_and_messages.main_menu import MainMenu
 
 
 class AnswerLogicManager:
@@ -27,6 +28,7 @@ class AnswerLogicManager:
 
     async def create_keyboard(
             self,
+            update: Union[Message, CallbackQuery],
             buttons: Optional[List],
             insert: bool = False,
             main_menu: bool = False,
@@ -46,7 +48,8 @@ class AnswerLogicManager:
         keyboard = InlineKeyboardMarkup()
         if buttons:
             for index, button in enumerate(buttons, 1):
-                button_name = button.name
+                button_name = I18N.translate_button(button.name, user=update.user)
+
                 if button.class_name == 'CreateNewTaskForResponseManually':
                     insert = True
 
@@ -61,11 +64,13 @@ class AnswerLogicManager:
                     keyboard.insert(InlineKeyboardButton(
                         text=button_name, callback_data=button.callback, url=button.url)) \
                         if insert and not main_menu else keyboard.add(InlineKeyboardButton(
-                            text=button_name, callback_data=button.callback, url=button.url))
+                        text=button_name, callback_data=button.callback, url=button.url))
 
         if main_menu:
             main_inline_button = InlineKeyboardButton(
-                text=self.main.name, callback_data=self.main.callback)
+                text=I18N.translate_button(self.main.name, user=update.user),
+                callback_data=self.main.callback
+            )
             keyboard.insert(main_inline_button) if insert else keyboard.add(main_inline_button)
 
         return keyboard
@@ -131,14 +136,48 @@ class AnswerLogicManager:
                         action='get', button_name=current_state, message=True):
                     buttons = message.children_buttons
 
-        # print(current_state)
-        if (current_state and current_state.startswith('FSMGreetingScriptStates')
-                and current_state != "FSMGreetingScriptStates:get_contacts"):
-            not_keyboard = True
-            if current_state == "FSMGreetingScriptStates:start_greeting" \
-                    and current_data.get('new_user'):
+        # FIXME разобраться новый юзер выбор языка
+        # print('current_state', current_state)
+        # print('current_data', current_data)
+
+        if current_state and current_state.startswith('FSMBeforeGreetingScriptStates'):
+            main_menu = False
+
+            if current_state == "FSMBeforeGreetingScriptStates:personal_data_processing_agreement":
+                if not button or button is self.main:
+                    button = await self.main.button_search_and_action_any_collections(
+                        action="get", button_name="PersonalDataProcessingAgreement")
+                await state.set_state(state=button.next_state)
+
+            elif (current_state == "FSMBeforeGreetingScriptStates:start_before_greeting"
+                    and current_data.get('new_user')):
                 button = await self.main.button_search_and_action_any_collections(
-                    action="get", button_name="StartGreetingButton")
+                    action="get", button_name="StartBeforeGreeting")
+                await state.set_state(state=button.next_state)
+
+            elif (current_state == "FSMBeforeGreetingScriptStates:first_select_language"
+                        and current_data.get('new_user')):
+                button = await self.main.button_search_and_action_any_collections(
+                    action="get", button_name="PersonalDataProcessingAgreement")
+                await state.set_state(state=button.next_state)
+
+        elif (current_state == "FSMGreetingScriptStates:start_greeting"
+              and current_data.get('new_user')):
+            not_keyboard = True
+            # button = await self.main.button_search_and_action_any_collections(
+            #     action="get", button_name="StartGreetingButton")
+
+        # if (current_state and current_state.startswith('FSMGreetingScriptStates')
+        #         and current_state != "FSMGreetingScriptStates:get_contacts"):
+        #     not_keyboard = True
+        #     if current_state == "FSMGreetingScriptStates:start_greeting" and current_data.get('new_user'):
+        #
+        #         button = await self.main.button_search_and_action_any_collections(
+        #             action="get", button_name="StartGreetingButton")
+
+        # FIXME разобраться новый юзер выбор языка
+        # current_state = await state.get_state()
+        # print('current_state', current_state)
 
         if not button and not message:
             """Если нет никаких данных всегда возвращает главное меню например по команде /start"""
@@ -170,7 +209,6 @@ class AnswerLogicManager:
                 reply_text, next_state = await button._set_answer_logic(update, state)
                 if hasattr(button, 'children_buttons'):
                     buttons = button.children_buttons
-
             else:
                 reply_text, next_state = button.reply_text, button.next_state
 
@@ -183,9 +221,10 @@ class AnswerLogicManager:
             keyboard = None
         else:
             keyboard = await self.create_keyboard(
+                update=update,
                 buttons=buttons,
                 insert=insert,
                 main_menu=main_menu,
                 parent_button=parent_button,
             )
-        return reply_text, keyboard, next_state
+        return I18N.translate_reply_text(reply_text, user=update.user), keyboard, next_state

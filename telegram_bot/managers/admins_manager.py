@@ -7,10 +7,10 @@ import openpyxl
 import psutil
 from aiogram.types import Message
 from aiogram.utils.exceptions import BotBlocked, UserDeactivated, ChatNotFound
+from django.conf import settings
 
 from users.models import User
 from ..buttons_and_messages.base_classes import Base
-from ..config import ADMINS, TECH_ADMINS, DEBUG
 from ..logger_config import PATH_FILE_DEBUG_LOGS, PATH_FILE_ERRORS_LOGS
 from ..utils import admins_send_message
 from ..utils.states import FSMAdminStates
@@ -32,8 +32,9 @@ class AdminsManager:
         self.logger = logger
         self.dbase = dbase
         self.requests_manager = rm
-        self.admins = tuple(map(int, ADMINS)) if ADMINS else tuple()
-        self.tech_admins = tuple(map(int, TECH_ADMINS)) if TECH_ADMINS else tuple()
+        self.admins = tuple(map(int, settings.ADMINS)) if settings.ADMINS else tuple()
+        self.tech_admins = tuple(
+            map(int, settings.TECH_ADMINS)) if settings.TECH_ADMINS else tuple()
 
     @staticmethod
     async def split_users_list(users_list, step=30) -> List:
@@ -120,7 +121,7 @@ class AdminsManager:
                 chat_id=message.from_user.id, document=open(PATH_FILE_DEBUG_LOGS, 'rb'))
             await self.bot.send_document(
                 chat_id=message.from_user.id, document=open(PATH_FILE_ERRORS_LOGS, 'rb'))
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + f'OK -> send logs files -> user: '
                                               f'{message.from_user.id}, username: '
                                               f'{message.from_user.username}'
@@ -181,7 +182,7 @@ class AdminsManager:
                     for day in range(datetime.now().date().day, 0, -1):
                         new_users_in_day = await self.dbase.count_users(
                             register=True,
-                            date=datetime.now().date()-timedelta(days=day - 1)
+                            date=datetime.now().date() - timedelta(days=day - 1)
                         )
                         new_users_in_month += new_users_in_day
                         ws.append((f'{datetime.now().day - day + 1}  /  {new_users_in_day}',))
@@ -266,7 +267,8 @@ class AdminsManager:
                     num_send += 1
                 else:
                     error = result[1]
-                    dict_errors[error] = dict_errors.get(error)+1 if dict_errors.get(error) else 1
+                    dict_errors[error] = dict_errors.get(error) + 1 if dict_errors.get(
+                        error) else 1
 
             await asyncio.sleep(1)
 
@@ -283,7 +285,7 @@ class AdminsManager:
 
         text = f'<b>Отправлено:</b> {num_send} из {len(id_users)}'
         next_state = None
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(self.sign + f'OK -> send {num_send} out of {len(id_users)} users')
 
         return text, next_state
@@ -315,10 +317,10 @@ class AdminsManager:
                 await self.bot.send_message(chat_id=user_id, text=f'{update.text}')
         # удалено в aiogram==3.1.1
         except (BotBlocked, UserDeactivated, ChatNotFound) as error:
-        # except TelegramAPIError as error:
+            # except TelegramAPIError as error:
             error = error.__repr__()
             # dict_errors[error] = dict_errors.get(error) + 1 if dict_errors.get(error) else 1
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.error(self.sign + f'BAD -> not send to user {user_id} error: {error}')
             await self.dbase.update_ban_from_user(update=update, ban_from_user=True)
             return False, error
@@ -326,7 +328,7 @@ class AdminsManager:
         except Exception as error:
             error = error.__repr__()
             # dict_errors[error] = dict_errors.get(error) + 1 if dict_errors.get(error) else 1
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.error(self.sign + f'BAD -> not send to user {user_id} error: {error}')
             return False, error
 

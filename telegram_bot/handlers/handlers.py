@@ -3,8 +3,8 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message, ParseMode
 from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageCantBeDeleted, \
     MessageToEditNotFound, MessageCantBeEdited
+from django.conf import settings
 
-from ..config import DEBUG
 from ..loader import dp, bot, alm, logger, Base
 from ..utils.exception_control import exception_handler_wrapper
 
@@ -14,7 +14,7 @@ async def delete_message(chat_id, message_id) -> bool:
     try:
         await bot.delete_message(chat_id=chat_id, message_id=message_id)
     except (MessageToDeleteNotFound, MessageCantBeDeleted) as exc:
-        if DEBUG:
+        if settings.DEBUG:
             logger.warning(f'HANDLERS Error: {chat_id=} | {message_id=} | {exc=}')
         return False
     else:
@@ -26,7 +26,7 @@ async def edit_message(chat_id, message_id) -> bool:
     try:
         await bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id)
     except (MessageToEditNotFound, MessageCantBeEdited) as exc:
-        if DEBUG:
+        if settings.DEBUG:
             logger.warning(f'HANDLERS Error: {chat_id=} | {message_id=} | {exc=}')
         return False
     else:

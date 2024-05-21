@@ -4,8 +4,8 @@ import inspect
 from os.path import basename
 from typing import Dict
 
-from ..config import ADMINS, TECH_ADMINS, DEBUG
 from aiogram.types import CallbackQuery, Message
+from django.conf import settings
 
 
 async def get_start_tb_frame_data(exc) -> Dict:
@@ -42,11 +42,11 @@ async def func_admins_message(
         call_data = update.data if isinstance(update, CallbackQuery) else None
         message_text = update.text if isinstance(update, Message) else None
 
-        if ADMINS or TECH_ADMINS:
+        if settings.ADMINS or settings.TECH_ADMINS:
             if exc:
                 start_exc_data = await get_start_tb_frame_data(exc)
                 if message:
-                    for admin in TECH_ADMINS:
+                    for admin in settings.TECH_ADMINS:
                         await asyncio.sleep(0.033)
                         await bot.send_message(chat_id=admin, text=message,
                                                disable_web_page_preview=disable_preview_page)
@@ -55,7 +55,7 @@ async def func_admins_message(
                     file, func, line, code = basename(
                         track.filename), track.function, track.lineno, "".join(track.code_context)
 
-                    for admin in TECH_ADMINS:
+                    for admin in settings.TECH_ADMINS:
                         await asyncio.sleep(0.033)
                         await bot.send_message(
                             chat_id=admin,
@@ -76,17 +76,17 @@ async def func_admins_message(
                                  f' \t \t <b>Func</b>: <i>{start_exc_data.get("func")}</i>\n'
                                  f' \t \t <b>Line</b>: {start_exc_data.get("line")}\n'
                         )
-                        if DEBUG:
+                        if settings.DEBUG:
                             logger.info(f'-> ADMIN SEND MESSAGE -> ERROR -> admin_id: {admin}')
 
             elif message and exc is None:
-                for admin in ADMINS:
+                for admin in settings.ADMINS:
                     await asyncio.sleep(0.033)
                     await bot.send_message(chat_id=admin, text=message,
                                            disable_web_page_preview=disable_preview_page)
-                    if DEBUG:
+                    if settings.DEBUG:
                         logger.info(f'-> ADMIN SEND MESSAGE -> admin_id: {admin}')
 
     except BaseException as i_exc:
-        if DEBUG:
+        if settings.DEBUG:
             logger.critical(f'CRITICAL_ERROR(admins_send_message.py): {i_exc}')

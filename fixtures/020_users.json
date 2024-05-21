@@ -1,0 +1,62 @@
+[
+{
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$fkt5ArG0rjmBNsMKP8h25J$HFTiRbTDwh7hEX5FTE/CKTqLhOoE/uiEcPcHQ0wO22A=",
+        "last_login": "2024-05-20T22:01:06.321Z",
+        "is_superuser": true,
+        "first_name": "",
+        "last_name": "",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2024-05-20T21:59:20.623Z",
+        "personal_data_processing_agreement": false,
+        "username": "msadmin",
+        "name": null,
+        "surname": null,
+        "patronymic": null,
+        "language": "ru",
+        "phone_number": null,
+        "email": null,
+        "photo": "",
+        "company": null,
+        "role_in_company": "Роль не указана",
+        "updated_at": "2024-05-20T21:59:20.744Z",
+        "ai_dialog": "",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$LB22K65c1ayJhQuODnuEun$ampPVhdxGtRLz+g9izgIsRz1ydLSNiMe99Crg6yDpaU=",
+        "last_login": null,
+        "is_superuser": false,
+        "first_name": "",
+        "last_name": "",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2024-05-20T21:59:58.962Z",
+        "personal_data_processing_agreement": false,
+        "username": "test",
+        "name": null,
+        "surname": null,
+        "patronymic": null,
+        "language": "ru",
+        "phone_number": null,
+        "email": "",
+        "photo": "",
+        "company": null,
+        "role_in_company": "Роль не указана",
+        "updated_at": "2024-05-20T22:01:32.576Z",
+        "ai_dialog": "",
+        "groups": [
+            1
+        ],
+        "user_permissions": []
+    }
+}
+]

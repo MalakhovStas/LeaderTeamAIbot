@@ -8,14 +8,11 @@ from aiogram.types import Message, CallbackQuery, Update, ReplyKeyboardRemove
 from django.conf import settings
 
 from ..config import (
-    FLOOD_CONTROL,
-    FLOOD_CONTROL_STOP_TIME,
-    DEFAULT_GREETING,
-    TECH_ADMINS,
     DEFAULT_PROJECT_IN_DEV_MESSAGE
 )
 from ..loader import bot, security, dbase, Base, storage
 from ..utils import exception_control, states
+from users.models import User
 
 
 class AccessControlMiddleware(BaseMiddleware):
@@ -36,11 +33,14 @@ class AccessControlMiddleware(BaseMiddleware):
             command = update.message.get_command()
 
         update = update.message if update.message else update.callback_query
+        state = FSMContext(storage=storage, chat=update.from_user.id, user=update.from_user.id)
+
         # print(update)
         # print(update.message.reply_markup.values.get('inline_keyboard')[0][0].text[-7:])
         # print(Base.general_collection)
 
-        if settings.ADMINS_ACCESS_ONLY and update.from_user.id not in map(int, TECH_ADMINS):
+        if settings.ADMINS_ACCESS_ONLY and update.from_user.id not in map(
+                int, settings.TECH_ADMINS):
             await bot.send_message(
                 chat_id=update.from_user.id,
                 text=DEFAULT_PROJECT_IN_DEV_MESSAGE,
@@ -79,14 +79,8 @@ class AccessControlMiddleware(BaseMiddleware):
         if user_status == "block":
             raise CancelHandler()
         elif user_status == "new_user":
-            state = FSMContext(storage=storage, chat=update.from_user.id, user=update.from_user.id)
-            await state.set_state(state=states.FSMGreetingScriptStates.start_greeting)
+            await state.set_state(state=states.FSMBeforeGreetingScriptStates.start_before_greeting)
             await state.update_data(data={'new_user': True})
-            await bot.send_message(
-                chat_id=update.from_user.id,
-                text=DEFAULT_GREETING,
-                reply_markup=ReplyKeyboardRemove()
-            )
 
         text_last_request = "Message: " + str(update.text) if isinstance(
             update, Message) else "Callback: " + str(update.data)
@@ -94,15 +88,27 @@ class AccessControlMiddleware(BaseMiddleware):
         await self.dbase.update_last_request_data(
             update=update, text_last_request=text_last_request)
 
-        if FLOOD_CONTROL:
+        if settings.FLOOD_CONTROL:
             control = await self.security.flood_control(update)
             if control in ['block', 'bad', 'blocked']:
                 if control != 'blocked':
                     text = {'block': f'&#129302 Доступ ограничен на '
-                                     f'{FLOOD_CONTROL_STOP_TIME} секунд',
+                                     f'{settings.FLOOD_CONTROL_STOP_TIME} секунд',
                             'bad': '&#129302 Не так быстро пожалуйста'}
                     await bot.send_message(chat_id=update.from_user.id, text=text[control])
                 raise CancelHandler()
+
+        # Добавляет экземпляр модели User к Message или CallbackQuery
+        update.user = await User.objects.filter(
+            tg_accounts__tg_user_id=update.from_user.id
+        ).select_related("company").prefetch_related("seven_petals_user").afirst()
+
+        # Если не подписано соглашение о, обработке персональных данных
+        if not user_status == "new_user" and not update.user.personal_data_processing_agreement:
+            await state.set_state(
+                state=states.FSMBeforeGreetingScriptStates.personal_data_processing_agreement
+            )
+
         from .. import handlers
 
     @exception_control.exception_handler_wrapper

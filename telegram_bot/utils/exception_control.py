@@ -1,13 +1,14 @@
 """Модуль декоратора для контроля исключений"""
 import functools
 from typing import Callable, Any, Optional, Union
-from aiogram.dispatcher.handler import CancelHandler
 
 from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.handler import CancelHandler
 from aiogram.types import CallbackQuery, Message, Update
 from aiogram.utils.exceptions import TelegramAPIError
+from django.conf import settings
+
 from ..loader import logger, storage
-from ..config import DEBUG
 
 
 def exception_handler_wrapper(func: Callable) -> Callable:
@@ -46,7 +47,7 @@ def exception_handler_wrapper(func: Callable) -> Callable:
                     """ Если все аргументы именованные, должен быть аргумент
                     "update" -> объектом одним из """
                     update: Union[Message, CallbackQuery] = kwargs.get('update')
-                if DEBUG:
+                if settings.DEBUG:
                     logger.error(f'user_id: {update.from_user.id}, username: '
                                  f'{update.from_user.first_name} -> Module: {func.__module__} | '
                                  f'Func: {func.__name__} -> Exception: {exc.__class__.__name__} '
@@ -69,14 +70,14 @@ def exception_handler_wrapper(func: Callable) -> Callable:
                 else:
                     """ Если это одно из исключений TelegramAPI ->
                     выводит информацию в консоль и лог файл """
-                    if DEBUG:
+                    if settings.DEBUG:
                         logger.error(f'-> ERROR -> Exception: {exc.__class__.__name__} -> '
                                      f'Traceback: {exc} -> User_name: '
                                      f'{update.from_user.first_name} '
                                      f'User_id: {update.from_user.id}')
                 return None
             except BaseException as exc:
-                if DEBUG:
+                if settings.DEBUG:
                     logger.critical(f'CRITICAL_ERROR(exception_control.py): {exc}')
 
     return wrapped_func

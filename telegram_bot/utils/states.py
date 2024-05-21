@@ -2,6 +2,14 @@
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 
+class FSMBeforeGreetingScriptStates(StatesGroup):
+    """Состояния пользователя перед сценарием первого знакомства с новым пользователем,
+    начальные настройки пользователя"""
+    start_before_greeting = State()
+    first_select_language = State()
+    personal_data_processing_agreement = State()
+
+
 class FSMGreetingScriptStates(StatesGroup):
     """Состояния пользователя в сценарии первого знакомства с новым пользователем"""
     start_greeting = State()
@@ -92,7 +100,7 @@ class FSMSevenPetalsStates(StatesGroup):
 
 class FSMUtilsStates(StatesGroup):
     """Состояния пользователя для дополнительных инструментов"""
-    ...
+    get_feedback = State()
 
 
 class FSMAdminStates(StatesGroup):

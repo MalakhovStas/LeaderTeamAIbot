@@ -1,14 +1,14 @@
 """Модуль для автоматизации работы с БД"""
 from datetime import datetime
-from typing import Union, Tuple, Optional, Dict
+from typing import Union, Tuple, Optional
 
 from aiogram.types import Message, CallbackQuery
+from asgiref.sync import sync_to_async
+from django.conf import settings
 from loguru import logger
 
-from ..config import ADMINS, TECH_ADMINS, DEBUG, DEFAULT_ADMIN_PASSWORD, DEFAULT_USER_PASSWORD
-from ..models import TelegramAccount
 from users.models import User
-from asgiref.sync import sync_to_async
+from ..models import TelegramAccount
 
 
 class DBManager:
@@ -36,8 +36,8 @@ class DBManager:
         если создан новый пользователь"""
         fact_create_and_num_users = False
         admin = True if update.from_user.id in set(tuple(map(
-            int, ADMINS)) if ADMINS else tuple() + tuple(map(
-                int, TECH_ADMINS)) if TECH_ADMINS else tuple()) else False
+            int, settings.ADMINS)) if settings.ADMINS else tuple() + tuple(map(
+            int, settings.TECH_ADMINS)) if settings.TECH_ADMINS else tuple()) else False
         user, fact_create = await TelegramAccount.objects.aget_or_create(
             tg_user_id=update.from_user.id)
 
@@ -47,7 +47,8 @@ class DBManager:
             user.tg_first_name = update.from_user.first_name
             user.tg_last_name = update.from_user.last_name
             user.position = "admin" if admin else "user"
-            user.password = DEFAULT_ADMIN_PASSWORD if admin else DEFAULT_USER_PASSWORD
+            user.password = settings.DEFAULT_ADMIN_PASSWORD \
+                if admin else settings.DEFAULT_USER_PASSWORD
             user.user = await User.objects.create_user(
                 username=user.tg_username or user.tg_first_name or user.tg_user_id,
                 password=user.password
@@ -55,7 +56,7 @@ class DBManager:
             await user.asave()
 
         text = 'created new user' if fact_create else 'get user'
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(f'{self.sign} {text.upper()}: {user.tg_username=} | {user.user_id=}')
         return user, fact_create_and_num_users
 
@@ -64,20 +65,20 @@ class DBManager:
             result = await sync_to_async(tuple)(
                 TelegramAccount.objects.filter(
                     ban_from_user=False).all().values_list("tg_user_id", flat=True))
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(f'{self.sign}func get_all_users -> selected all users_id WHERE '
                                   f'ban != ban | num: {len(result) if result else None}')
 
         elif id_only:
             result = await sync_to_async(tuple)(
                 TelegramAccount.objects.all().values_list("tg_user_id", flat=True))
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + f'func get_all_users -> selected all users_id '
                                               f'num: {len(result) if result else None}')
 
         else:
             result = await sync_to_async(tuple)(TelegramAccount.objects.all())
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + f'func get_all_users -> selected all users fields '
                                               f'num: {len(result) if result else None}')
         return result
@@ -106,7 +107,7 @@ class DBManager:
             result = f'down_balance: {down_balance}'
         else:
             result = f'zero_balance: {zero_balance}'
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(self.sign + f'{user_id=} | {result=} | new {user.balance=}')
         return True, user.balance, user.tg_username
 
@@ -138,7 +139,7 @@ class DBManager:
             result = f'down_balance: {down_balance}'
         else:
             result = f'zero_balance: {zero_balance}'
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(self.sign + f'{user_id=} | {result=} | new {user.balance_requests=}')
         return True, user.balance_requests, user.tg_username
 
@@ -153,7 +154,7 @@ class DBManager:
         else:
             user.access = 'allowed'
         await user.asave()
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(self.sign + f'func update_user_access -> '
                                           f'{"BLOCK" if block else "ALLOWED"} '
                                           f'| user_id: {user_id}')
@@ -167,9 +168,10 @@ class DBManager:
             return False
         user.ban_from_user = ban_from_user
         await user.asave()
-        if DEBUG:
-            self.logger.debug(self.sign + f'func update_ban_from_user -> user: {user.tg_username} | '
-                                          f'user_id: {update.from_user.id} | ban: {ban_from_user}')
+        if settings.DEBUG:
+            self.logger.debug(
+                self.sign + f'func update_ban_from_user -> user: {user.tg_username} | '
+                            f'user_id: {update.from_user.id} | ban: {ban_from_user}')
         return True, user.tg_username
 
     async def count_users(
@@ -180,7 +182,7 @@ class DBManager:
 
         if all_users:
             nums = await TelegramAccount.objects.acount()
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + f'func count_users -> all users {nums}')
 
         elif register:
@@ -189,13 +191,13 @@ class DBManager:
                 added_date__month=date.month,
                 added_date__day=date.day
             ).acount()
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + 'func count_users -> num users: '
                                               f'{nums} WHERE date_join == date: {date}')
 
         else:
             nums = await TelegramAccount.objects.filter(date_last_request__gte=date).acount()
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + f'func count_users -> num users: {nums} '
                                               f'WHERE date_last_request == date: {date}')
         return nums
@@ -205,10 +207,10 @@ class DBManager:
             "tg_user_id", "tg_username", "tg_first_name", "added_date",
             "date_last_request", "text_last_request", "num_requests", "ban_from_user").all())
         if not users:
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.error(self.sign + 'BAD -> NOT users in DB')
         else:
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + 'OK -> SELECT all contacts users -> '
                                               f'return -> {len(users)} users contacts')
         return users
@@ -216,7 +218,7 @@ class DBManager:
     async def select_password(self, user_id: int) -> str:
         user = await TelegramAccount.objects.filter(tg_user_id=user_id).aget()
 
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(self.sign + 'func select_password password -> '
                                           f'len password {len(user.password)}')
 
@@ -231,7 +233,7 @@ class DBManager:
         user.num_requests += 1
         user.text_last_request = text_last_request
         await user.asave()
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(self.sign + 'func update_last_request_data -> '
                                           f'user: {update.from_user.username} | '
                                           f'user_id:{update.from_user.id} | '

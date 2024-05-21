@@ -50,6 +50,7 @@ aiofiles = "^23.2.1"
 matplotlib = "^3.8.2"
 httpx = {extras = ["socks"], version = "^0.27.0"}
 django-celery-beat = "^2.6.0"
+fpdf2 = "^2.7.8"
 
 
 

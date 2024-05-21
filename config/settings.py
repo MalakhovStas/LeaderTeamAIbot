@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_jinja',
     'phonenumber_field',
+    'core.apps.CoreConfig',
     'users.apps.UsersConfig',
     'company.apps.CompanyConfig',
     'psychological_testing.apps.PsychologicalTestingConfig',
@@ -254,7 +255,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_L10N = True
@@ -272,6 +273,7 @@ STATIC_URL = '/static/'
 
 if DEBUG:
     STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
+    # STATIC_ROOT = STATICFILES_DIRS
 else:
     if PROJECT_IN_DEV:
         STATIC_ROOT = '/home/Development/static/'
@@ -297,9 +299,6 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-
-# Данные для отправки сообщений в Телеграм пользователя.
-BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'unsafe-none'
 CORS_ALLOW_ALL_ORIGINS = True  # Добавляет заголовок "Access-Control-Allow-Headers: * "
@@ -341,6 +340,77 @@ X_MAX_PRIORITY = 10
 APP_CONFIG = {'periodic_tasks_workers': []}
 
 GENERAL_DATETIME_FORMAT_FOR_MESSAGE = "%d.%m.%Y %H:%M"
+
+# Ниже настройки Телеграмм бота
+
+# Количество перезапусков бота в случае падения
+MAX_RESTART_BOT = 3
+
+# Токен и имя телеграм бота
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+BOT_NIKNAME = os.getenv('BOT_NIKNAME')
+
+# Список администраторов и ссылка на чат поддержки и менеджера
+ADMINS = os.getenv('ADMINS').split(', ') if os.getenv('ADMINS') else tuple()
+TECH_ADMINS = os.getenv('TECH_ADMINS').split(', ') if os.getenv('TECH_ADMINS') else tuple()
+# SUPPORT = f"tg://openmessage?user_id={os.getenv('SUPPORT_ID')}"
+SUPPORT = f"https://t.me/{os.getenv('SUPPORT_USERNAME')}"
+# CONTACT_MANAGER = f"tg://openmessage?user_id={os.getenv('CONTACT_MANAGER_ID')}"
+CONTACT_MANAGER = f"https://t.me/{os.getenv('CONTACT_MANAGER_USERNAME')}"
+
+# Команды бота
+DEFAULT_COMMANDS = (
+    ('start', 'Запустить бота'),
+    # ('profile', 'Настройки профиля'),
+    # ('chatgpt', 'Пообщаться с AI'),
+)
+
+# Файл информации о пользователях по команде admin
+PATH_USERS_INFO = 'users_info.xlsx'
+
+# Включение / отключение механизма защиты от флуда
+FLOOD_CONTROL = True
+
+# Время между сообщениями от пользователя для защиты от флуда в секундах
+FLOOD_CONTROL_TIME = 0.3
+
+# Количество предупреждений перед блокировкой для защиты от флуда
+FLOOD_CONTROL_NUM_ALERTS = 10
+
+# Время остановки обслуживания пользователя для защиты от флуда в секундах
+FLOOD_CONTROL_STOP_TIME = 60
+
+# Время жизни реферальной ссылки для добавления пользователей в секундах
+INVITE_LINK_LIFE = 60*60
+
+# Настройки дефолтного timeout для aiohttp запросов RequestsManager
+RM_TIMEOUT = 20
+
+# Настройка планировщика задач apscheduler, время между запуском
+# AutoUpdateFeedbackManager -> finding_unanswered_feedbacks - интервал обновления отзывов
+AUFM_INTERVAL_SECONDS = 60*60  # каждый час
+
+# Настройки прокси
+USE_PROXI = True
+PROXI_FILE = BASE_DIR.joinpath('proxy.txt')
+TYPE_PROXI = 'SOCKS5'
+
+# Доступное кол-во запросов по умолчанию
+DEFAULT_FREE_BALANCE_REQUEST_USER = 1_000_000
+
+# Пароли пользователей по умолчанию
+DEFAULT_ADMIN_PASSWORD = "admin"
+DEFAULT_USER_PASSWORD = "user_password"
+
+# Роли в компаниях
+COMPANY_ROLES = {
+    1: 'Собственник бизнеса',
+    2: 'СЕО',
+    3: 'Топ-менеджер',
+    4: 'Руководитель подразделения',
+    5: 'HR',
+    6: 'Специалист',
+}
 
 # переназначает переменные, используется в продакшн
 from . import production  # noqa F401,E402

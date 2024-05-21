@@ -1,10 +1,11 @@
 """Модуль формирования моделей БД Телеграм аккаунтов"""
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
-from django.contrib.auth import get_user_model
-from .config import DEFAULT_FREE_BALANCE_REQUEST_USER
-from config.models.base_model import BaseModel
+
+from core.models import BaseModel
 
 
 class TelegramAccount(BaseModel):
@@ -33,7 +34,7 @@ class TelegramAccount(BaseModel):
 
     # Режим доступа к боту
     access = models.CharField(
-        null=False, blank=True, default="allowed", verbose_name=_('access'))
+        max_length=256, null=False, blank=True, default="allowed", verbose_name=_('access'))
 
     # Время начала блокировки пользователя используется в middleware
     start_time_limited = models.IntegerField(
@@ -64,7 +65,7 @@ class TelegramAccount(BaseModel):
     balance_requests = models.IntegerField(
         null=False,
         blank=True,
-        default=DEFAULT_FREE_BALANCE_REQUEST_USER,
+        default=settings.DEFAULT_FREE_BALANCE_REQUEST_USER,
         verbose_name=_('balance requests')
     )
 

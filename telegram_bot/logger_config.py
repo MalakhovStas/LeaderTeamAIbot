@@ -1,6 +1,6 @@
 """Модуль конфигурации логирования"""
 from loguru import logger
-from .config import TG_BOT_BASE_DIR
+from django.conf import settings
 
 
 debug_format = ("{time:DD-MM-YYYY at HH:mm:ss} | {level} | file: {file} "
@@ -19,9 +19,9 @@ logger_common_args = {
 
 print_exchange_response = True
 
-PATH_FILE_DEBUG_LOGS = TG_BOT_BASE_DIR.joinpath("logs/tg_bot_debug.log")
-PATH_FILE_ERRORS_LOGS = TG_BOT_BASE_DIR.joinpath("logs/tg_bot_errors.log")
-PATH_FILE_RequestsManager = TG_BOT_BASE_DIR.joinpath("logs/tg_bot_RequestsManager.log")
+PATH_FILE_DEBUG_LOGS = settings.BASE_DIR.joinpath("logs/tg_bot_debug.log")
+PATH_FILE_ERRORS_LOGS = settings.BASE_DIR.joinpath("logs/tg_bot_errors.log")
+PATH_FILE_RequestsManager = settings.BASE_DIR.joinpath("logs/tg_bot_RequestsManager.log")
 
 LOGGER_DEBUG = {
     "sink": PATH_FILE_DEBUG_LOGS,

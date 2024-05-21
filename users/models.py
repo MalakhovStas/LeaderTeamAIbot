@@ -1,15 +1,22 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
-from .manager import CustomUserManager
 from company.models import Company
-from psychological_testing.models import SevenPetals
+from .manager import CustomUserManager
 
 
 class User(AbstractUser):
     """Абстрактная модель User, добавляет в стандартную модель дополнительные поля."""
+    personal_data_processing_agreement = models.BooleanField(
+        blank=True,
+        null=False,
+        default=False,
+        verbose_name=_('personal data processing agreement')
+    )
+
     username = models.CharField(
         max_length=256, unique=True, verbose_name=_('username'))
 
@@ -21,6 +28,15 @@ class User(AbstractUser):
 
     patronymic = models.CharField(
         max_length=256, blank=True, null=True, verbose_name=_('patronymic'))
+
+    language = models.CharField(
+        max_length=8,
+        blank=True,
+        null=False,
+        choices=settings.LANGUAGES,
+        default='ru',
+        verbose_name=_("language")
+    )
 
     phone_number = PhoneNumberField(
         unique=False, null=True, blank=True, verbose_name=_('phone number'))
@@ -40,20 +56,13 @@ class User(AbstractUser):
     role_in_company = models.CharField(
         max_length=256, blank=True, default="Роль не указана", verbose_name=_('role in company'))
 
-    seven_petals = models.OneToOneField(
-        to=SevenPetals,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='user',
-        verbose_name=_('seven_petals'))
-
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name=_('updated date')
     )
 
     ai_dialog = models.TextField(null=False, blank=True, default='', verbose_name=_('ai dialog'))
+
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
 
@@ -72,4 +81,3 @@ class User(AbstractUser):
     def __str__(self):
         """Переопределение __str__, для отображения информации о пользователе"""
         return f"User - id: {self.pk} | name: {self.name} | username: {self.username}"
-

@@ -5,7 +5,9 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery
 from loguru import logger
 
-from ..config import FACE_BOT, DEBUG
+from .. import config
+from core.utils.i18n import I18N
+from django.conf import settings
 
 
 class Base(ABC):
@@ -18,17 +20,15 @@ class Base(ABC):
     exception_controller = None  # Добавляется в loader.py
 
     reset_state = 'reset_state'
-    default_error = FACE_BOT + 'Извините, произошла ошибка, попробуйте немного позже'
+    default_error = config.DEFAULT_ERROR
 
-    default_bad_text = 'Нет данных'
-    default_service_in_dev = '🛠 Сервис в разработке, в ближайшее время функционал будет доступен'
-    default_incorrect_data_input_text = FACE_BOT + 'Введены некорректные данные - {text}'
-    default_generate_answer = FACE_BOT + 'Мне нужно немного времени… Уже пишу ✍️'
-    default_download_information = FACE_BOT + '🌐 {about}\nнемного подождите пожалуйста ...'
-    default_choice_menu = FACE_BOT + '<b>Выбирайте, что вам нужно</b> 😉'
-    # default_i_generate_text = FACE_BOT + 'Мой ответ на Ваш вопрос:\n\n'
-    default_i_generate_text = FACE_BOT + '\t\t'
-    default_text_for_payment_link = FACE_BOT + f'<b>Ваша ссылка на оплату:</b>\n\n'
+    default_bad_text = config.DEFAULT_BAD_TEXT
+    default_service_in_dev = config.DEFAULT_SERVICE_IN_DEV
+    default_incorrect_data_input_text = config.DEFAULT_INCORRECT_DATA_INPUT_TEXT
+    default_generate_answer = config.DEFAULT_GENERATE_ANSWER
+    default_choice_menu = config.DEFAULT_CHOICE_MENU
+    default_i_generate_text = config.DEFAULT_I_GENERATE_TEXT
+    default_text_for_payment_link = config.DEFAULT_TEXT_FOR_PAYMENT_LINK
 
     # Как выглядит словарь
     # general_collection = {
@@ -46,22 +46,22 @@ class Base(ABC):
         level = 'debug' if not level else level
 
         if level.lower() == 'info':
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.info(text)
 
         elif level.lower() == 'warning':
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.warning(text)
 
         elif level.lower() == 'error':
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.error(text)
 
         else:
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(text)
 
-    def _set_reply_text(self) -> Optional[str]:
+    def _set_reply_text(self) -> Union[str, I18N]:
         """Установка текста ответа """
         reply_text = 'Default: reply_text not set -> override method _set_reply_text ' \
                      'in class' + self.__class__.__name__
@@ -79,7 +79,7 @@ class Base(ABC):
     async def get_many_buttons_from_any_collections(
             cls, get_buttons_list: Union[List, Tuple],
             user_id: Optional[int] = None) -> Optional[Any]:
-        if DEBUG:
+        if settings.DEBUG:
             cls.logger.debug(f'Base: get_many_buttons_from_any_collections -> '
                              f'get_buttons_list: {get_buttons_list}')
         result_buttons_list = list()
@@ -94,11 +94,11 @@ class Base(ABC):
                         result_buttons_list.append(result_button)
 
         if result_buttons_list:
-            if DEBUG:
+            if settings.DEBUG:
                 cls.logger.debug(f'Base:-> OK -> {get_buttons_list=} '
                                  f'| return {result_buttons_list=}')
         else:
-            if DEBUG:
+            if settings.DEBUG:
                 cls.logger.warning(f'Base: -> BAD -> {get_buttons_list=} '
                                    f'| return {result_buttons_list=}')
 
@@ -136,7 +136,7 @@ class Base(ABC):
                 raise ValueError(f'aufm_catalog не поддерживает {action=}')
 
         if not button_name and not instance_button:
-            if DEBUG:
+            if settings.DEBUG:
                 cls.logger.error(f'Чтобы выполнить {action=} необходимо передать button_name или '
                                  f'instance_button {updates_data=} | {aufm_catalog_key=}')
             button_name = 'MainMenu'
@@ -144,11 +144,11 @@ class Base(ABC):
         if instance_button and not aufm_catalog_key and not updates_data:
             button_name = instance_button.class_name
 
-        if button_name.startswith('Supplier'):
-            collection_name = 'suppliers'
+        # if button_name.startswith('Supplier'):
+        #     collection_name = 'suppliers'
 
-        elif button_name.startswith('Feedback'):
-            collection_name = 'feedbacks'
+        # elif button_name.startswith('Feedback'):
+        #     collection_name = 'feedbacks'
 
         else:
             if message:
@@ -189,11 +189,11 @@ class Base(ABC):
             button = None
 
         if button:
-            if DEBUG:
+            if settings.DEBUG:
                 cls.logger.debug(f'Base:-> OK -> {action=} | {button_name=} '
                                  f'| {collection_name=} | return {button=}')
         else:
-            if DEBUG:
+            if settings.DEBUG:
                 cls.logger.warning(f'Base: -> BAD -> {action=} | {button_name=} '
                                    f'| {collection_name=} | return {button=}')
 
@@ -296,7 +296,7 @@ class BaseButton(Base):
                 f'{[f"< {child.class_name}: {child.name} >" for child in self.children_buttons]} |'
                 f'messages: {[f"< {message.class_name}: {message.state_or_key} >" for message in self.children_messages.values()]}')
 
-    def _set_name(self) -> str:
+    def _set_name(self) -> Union[str, I18N]:
         name = 'Button:' + self.class_name
         return name
 

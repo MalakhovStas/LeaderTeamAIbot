@@ -1,10 +1,12 @@
 """Модуль конфигурации админки моделей Телеграм бота"""
+from django.conf import settings
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from psychological_testing.models import SevenPetals
 from users.models import User
 from .models import Company, CalendarEvent, CalendarEventReminder
 
@@ -71,7 +73,7 @@ class CompanyUserInline(admin.TabularInline):
         'role_in_company',
         'email',
         'phone_number',
-        'seven_petals'
+        'user_last_seven_petals'
     )
     readonly_fields = (
         'role_in_company',
@@ -81,7 +83,7 @@ class CompanyUserInline(admin.TabularInline):
         'patronymic',
         'phone_number',
         'email',
-        'seven_petals'
+        'user_last_seven_petals'
     )
     extra = 0
     max_num = 0
@@ -89,6 +91,20 @@ class CompanyUserInline(admin.TabularInline):
     classes = ('collapse',)
     verbose_name_plural = _('command')
     exclude = ('pk',)
+
+    def user_last_seven_petals(self, obj):
+        """Отображает последнее тестирование seven_petals пользователя"""
+        result = '-'
+        if obj.pk:
+            last_seven_petals = SevenPetals.objects.filter(user=obj).first()
+            url = reverse(
+                viewname=f'admin:{last_seven_petals._meta.app_label}_{last_seven_petals._meta.model_name}_change',
+                args=[last_seven_petals.pk]
+            )
+            result = format_html(f'<a href="{url}">{last_seven_petals}</a>')
+        return result
+
+    user_last_seven_petals.short_description = _('test seven petals')
 
     def username_with_link(self, obj):
         """Отображает username пользователя со ссылкой для перехода"""
@@ -110,23 +126,66 @@ class CompanyAdmin(admin.ModelAdmin):
     inlines = [CompanyUserInline, ActiveCalendarEventInline, PastCalendarEventInline]
     ordering = ('created_at',)
     readonly_fields = (
-        'seven_petals',
+        'company_last_seven_petals',
         'display_graph',
+        'display_graph_statistics',
         'num_calendar_active_events',
-        'num_calendar_past_events'
+        'num_calendar_past_events',
     )
+    # fieldsets = (None,
+    #      {'fields': (
+    #          'name',
+    #          'phone_number',
+    #          'about_company',
+    #          'about_team',
+    #          'company_last_seven_petals',
+    #          'display_graph',
+    #          'display_graph_statistics',
+    #  )})
     search_fields = ('name',)
 
-    @staticmethod
-    def display_graph(obj):
+    def get_company_last_seven_petals(self, obj):
+        """Возвращает объект последнего тестирования seven_petals компании"""
+        if obj.pk:
+            return SevenPetals.objects.filter(company=obj).first()
+
+    def company_last_seven_petals(self, obj):
+        """Отображает последнее тестирование seven_petals компании"""
+        result = '-'
+        if obj.pk and (last_seven_petals := self.get_company_last_seven_petals(obj)):
+            url = reverse(
+                viewname=f'admin:{last_seven_petals._meta.app_label}_'
+                         f'{last_seven_petals._meta.model_name}_change',
+                args=[last_seven_petals.pk]
+            )
+            result = format_html(f'<a href="{url}">{last_seven_petals}</a>')
+        return result
+
+    company_last_seven_petals.short_description = _('test seven petals')
+
+    def display_graph(self, obj):
         """Отображение графика тестирования"""
-        if obj.seven_petals and obj.seven_petals.graph:
+        if obj.pk and (last_seven_petals := self.get_company_last_seven_petals(obj)):
             return mark_safe(
-                f'<img src="{obj.seven_petals.graph.url}" width="320" height="240" />')
+                f'<img src="{last_seven_petals.graph.url}" width="320" height="240" />')
         return "-"
 
     display_graph.allow_tags = True
     display_graph.short_description = _('graph')
+
+    def display_graph_statistics(self, obj):
+        """Отображение графика статистики тестирования компании"""
+        # FIXME убрать хард код
+        result = '-'
+        if obj.pk:
+            filename = f'companies_tests_graphs/company_id:{obj.pk}_seven_petals_statistics.png'
+            result = mark_safe(
+                f'<img src="{settings.MEDIA_URL}{filename}" width="340" height="500"/>'
+            )
+        return result
+
+    display_graph_statistics.allow_tags = True
+    display_graph_statistics.short_description = _('graph statistics')
 
     @staticmethod
     def num_calendar_active_events(obj):
@@ -134,6 +193,7 @@ class CompanyAdmin(admin.ModelAdmin):
         if obj.calendar_active_events:
             return len(obj.calendar_active_events)
         return "-"
+
     num_calendar_active_events.short_description = _('number of active calendar events')
 
     @staticmethod

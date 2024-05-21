@@ -2,11 +2,14 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from psychological_testing.models import SevenPetals
 from telegram_bot.models import TelegramAccount
 from .models import User
+from django.urls import reverse
 
 AdminSite.site_header = settings.PYPROJECT['tool']['poetry']['name']
 
@@ -28,13 +31,15 @@ class UserRegAdmin(UserAdmin):
 
     inlines = [TelegramAccountInline]
     readonly_fields = (
-        'seven_petals',
+        'user_last_seven_petals',
         'ai_dialog',
         'date_joined',
         'updated_at',
         'last_login',
         'display_photo',
-        'display_graph',
+        'display_graph_seven_petals',
+        'display_graph_seven_petals_statistics',
+        'personal_data_processing_agreement',
     )
     ordering = '-is_superuser', '-is_staff', '-username',
     search_fields = ('username',)
@@ -60,19 +65,21 @@ class UserRegAdmin(UserAdmin):
             (_('personal information'),
              {'fields': (
                  'display_photo',
+                 'personal_data_processing_agreement',
                  'username',
                  'name',
                  'surname',
                  'patronymic',
+                 'language',
                  'phone_number',
                  'email',
                  'company',
              )}),
             (_('psychological testing'),
              {'fields': (
-                 'seven_petals',
-                 'display_graph',
-
+                    'user_last_seven_petals',
+                    'display_graph_seven_petals',
+                    'display_graph_seven_petals_statistics',
              )}),
         ]
         if request.user.is_superuser:
@@ -82,7 +89,7 @@ class UserRegAdmin(UserAdmin):
                 })
             fieldsets.insert(0, credentials)
             fieldsets.insert(1, permissions)
-        if obj.ai_dialog:
+        if obj and obj.ai_dialog:
             fieldsets.append(communication_assistant)
         return fieldsets
 
@@ -99,12 +106,44 @@ class UserRegAdmin(UserAdmin):
     display_photo.allow_tags = True
     display_photo.short_description = _('photo')
 
-    def display_graph(self, obj):
-        """Отображение графика тестирования"""
-        if obj.seven_petals and obj.seven_petals.graph:
+    def get_user_last_seven_petals(self, obj):
+        """Возвращает объект последнего тестирования seven_petals пользователя"""
+        if obj.pk:
+            return SevenPetals.objects.filter(user=obj).first()
+
+    def user_last_seven_petals(self, obj):
+        """Отображает последнее тестирование seven_petals пользователя"""
+        result = '-'
+        if obj.pk and (last_seven_petals := self.get_user_last_seven_petals(obj)):
+            url = reverse(
+                viewname=f'admin:{last_seven_petals._meta.app_label}_'
+                         f'{last_seven_petals._meta.model_name}_change',
+                args=[last_seven_petals.pk]
+            )
+            result = format_html(f'<a href="{url}">{last_seven_petals}</a>')
+        return result
+
+    def display_graph_seven_petals_statistics(self, obj):
+        """Отображение графика статистики тестирования пользователя"""
+        # FIXME убрать хард код
+
+        result = '-'
+        if obj.pk:
+            filename = f'users_tests_graphs/tg_user_id:{obj.pk}_seven_petals_statistics.png'
+            result = mark_safe(
+                f'<img src="{settings.MEDIA_URL}{filename}" width="340" height="500"/>'
+            )
+        return result
+
+    display_graph_seven_petals_statistics.allow_tags = True
+    display_graph_seven_petals_statistics.short_description = _('graph statistics')
+
+    def display_graph_seven_petals(self, obj):
+        """Отображение графика тестирования пользователя"""
+        if obj.pk and (last_seven_petals := self.get_user_last_seven_petals(obj)):
             return mark_safe(
-                f'<img src="{obj.seven_petals.graph.url}" width="320" height="240" />')
+                f'<img src="{last_seven_petals.graph.url}" width="320" height="240" />')
         return "-"
 
-    display_graph.allow_tags = True
-    display_graph.short_description = _('graph')
+    display_graph_seven_petals.allow_tags = True
+    display_graph_seven_petals.short_description = _('graph')

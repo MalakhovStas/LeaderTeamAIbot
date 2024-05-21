@@ -1,10 +1,10 @@
 """ Модуль загрузки основных инструментов приложения """
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from django.conf import settings
 from loguru import logger
 
 from .buttons_and_messages.base_classes import Base
-from .config import BOT_TOKEN
 from .managers.admins_manager import AdminsManager
 from .managers.answer_logic_manager import AnswerLogicManager
 from .managers.async_db_manager import DBManager
@@ -19,7 +19,7 @@ from .managers.security_manager import SecurityManager
 
 dbase = DBManager()
 security = SecurityManager(dbase=dbase, logger=logger)  # должен быть первым из менеджеров
-bot = Bot(token=BOT_TOKEN, parse_mode=types.ParseMode.HTML)
+bot = Bot(token=settings.BOT_TOKEN, parse_mode=types.ParseMode.HTML)
 storage = MemoryStorage()
 dp = Dispatcher(bot=bot, storage=storage)
 rm = RequestsManager(logger=logger)

@@ -6,8 +6,7 @@ from typing import Iterable, Generator, Optional, Dict, Union, List, Tuple
 import aiofiles
 import aiohttp
 from aiohttp_proxy import ProxyConnector, ProxyType
-
-from ..config import USE_PROXI, PROXI_FILE, TYPE_PROXI, RM_TIMEOUT, DEBUG
+from django.conf import settings
 
 
 class RequestsManager:
@@ -65,7 +64,7 @@ class RequestsManager:
         if isinstance(result, dict) and result.get('error'):
             step = step + 1
             text = 'i try again call func aio_request because' if step < 3 else 'brake'
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.warning(self.sign + f'func __call__ {step=} -> {text} '
                                                 f'-> {result.get("error")=} | '
                                                 f'{str(result)[:100]=}...')
@@ -75,7 +74,7 @@ class RequestsManager:
                                              step=step, use_proxi=use_proxi,
                                              post_to_form=post_to_form)
         else:
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + f'{step=} func __call__ return '
                                               f'{type(result)=} | {len(result)=}')
 
@@ -84,7 +83,7 @@ class RequestsManager:
     async def check_proxi(self, ip, port, login, password) -> bool:
         url = 'https://check-host.net/ip'
         connector = ProxyConnector(
-            proxy_type=self.proxi_types.get(TYPE_PROXI.lower()),
+            proxy_type=self.proxi_types.get(settings.TYPE_PROXI.lower()),
             host=ip,
             port=port,
             username=login,
@@ -93,7 +92,7 @@ class RequestsManager:
 
         async with aiohttp.ClientSession(connector=connector) as session:
             try:
-                async with session.get(url, ssl=False, timeout=RM_TIMEOUT) as response:
+                async with session.get(url, ssl=False, timeout=settings.RM_TIMEOUT) as response:
                     if response.content_type in ['text/html', 'text/plain']:
                         result = {'response': await response.text()}
                     else:
@@ -102,19 +101,19 @@ class RequestsManager:
                 result = {'response': exc}
 
         if result.get('response') == ip:
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.debug(self.sign + f'GOOD PROXI {ip=}, {port=}, '
-                                              f'{login=}, {password=}, {TYPE_PROXI=}')
+                                              f'{login=}, {password=}, {settings.TYPE_PROXI=}')
             return True
         else:
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.warning(self.sign + f'ERROR PROXI {ip=}, {port=}, {login=}, '
-                                                f'{password=}, {TYPE_PROXI=} | {result=}')
+                                                f'{password=}, {settings.TYPE_PROXI=} | {result=}')
             return False
 
     @staticmethod
     def get_proxies() -> List:
-        with open(PROXI_FILE, 'r') as file:
+        with open(settings.PROXI_FILE, 'r') as file:
             proxies = file.read().splitlines()
         return proxies if proxies else list()
 
@@ -132,7 +131,7 @@ class RequestsManager:
     async def get_proxi(self, check_raw_proxi: Optional[str] = None) -> Tuple:
         ip, port, login, password = None, None, None, None
 
-        if USE_PROXI:
+        if settings.USE_PROXI:
             try:
                 if not check_raw_proxi:
                     proxi = random.choice(self.proxies)
@@ -141,13 +140,13 @@ class RequestsManager:
                 proxi = proxi.replace(' ', '\t')
                 ip, port, login, password = proxi.split('\t')
                 text = 'CHECK_PROXI' if check_raw_proxi else 'USE PROXI'
-                if DEBUG:
+                if settings.DEBUG:
                     self.logger.debug(self.sign + f'{text} -> {ip=}, {port=}, {login=}, '
-                                                  f'{password=}, {TYPE_PROXI=}')
+                                                  f'{password=}, {settings.TYPE_PROXI=}')
                 if not await self.check_proxi(ip=ip, port=port, login=login, password=password):
                     ip, port, login, password = None, None, None, None
             except Exception as exc:
-                if DEBUG:
+                if settings.DEBUG:
                     self.logger.error(self.sign + f'{exc=}')
         return ip, port, login, password
 
@@ -172,13 +171,13 @@ class RequestsManager:
             headers.pop('Content-Type')
         else:
             data = None
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(self.sign + f'{step=} -> sending request to: '
                                           f'{url=} | {method=} | {str(data)=} | '
                                           f'{str(headers)[:100]=}...')
         if ip and port and login and password:
             connector = ProxyConnector(
-                proxy_type=self.proxi_types.get(TYPE_PROXI.lower()),
+                proxy_type=self.proxi_types.get(settings.TYPE_PROXI.lower()),
                 host=ip,
                 port=port,
                 username=login,
@@ -192,21 +191,22 @@ class RequestsManager:
                 try:
                     if method == 'post':
                         async with session.post(url, data=data, ssl=False,
-                                                timeout=RM_TIMEOUT) as response:
+                                                timeout=settings.RM_TIMEOUT) as response:
                             if response.content_type in ['text/html', 'text/plain']:
                                 result = {'response': await response.text()}
                             else:
                                 result = await response.json()
                     elif method == 'patch':
                         async with session.patch(url, data=data, ssl=False,
-                                                 timeout=RM_TIMEOUT) as response:
+                                                 timeout=settings.RM_TIMEOUT) as response:
                             if response.content_type in ['text/html', 'text/plain']:
                                 result = {'response': await response.text()}
                             else:
                                 result = await response.json()
 
                     else:
-                        async with session.get(url, ssl=False, timeout=RM_TIMEOUT) as response:
+                        async with session.get(
+                                url, ssl=False, timeout=settings.RM_TIMEOUT) as response:
                             if response.content_type in ['text/html', 'text/plain']:
                                 result = {'response': await response.text()}
                             else:
@@ -214,14 +214,14 @@ class RequestsManager:
 
                 except Exception as exception:
                     text = f'try again' if step < 3 else 'brake requests return EMPTY DICT'
-                    if DEBUG:
+                    if settings.DEBUG:
                         self.logger.warning(self.sign + f'ERROR -> {step=} | {exception=} | '
                                                         f'proxi: {ip, port, login, password} '
                                                         f'-> {text}')
                     step += 1
                 else:
                     break
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.debug(self.sign + f'{step=} | proxi: {ip, port, login, password} | '
                                           f'return={str(result)[:100]}...')
         return result

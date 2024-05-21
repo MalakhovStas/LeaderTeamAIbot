@@ -1,35 +1,27 @@
 """Модуль инструментов для взаимодействия с библиотекой и сервисом OpenAI"""
 import asyncio
 import os
-from typing import Sequence, Optional, Union, List
+from typing import Optional, Union, List
 
 from aiogram.types import CallbackQuery, Message
-from httpx import Client, AsyncClient
+# from asgiref.sync import sync_to_async
+from django.conf import settings
+from httpx import AsyncClient
 from openai import AsyncOpenAI
+from openai.types.audio.transcription import Transcription
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
-from openai.types.audio.transcription import Transcription
 
-from ..config import (
-    OpenAI_TOKEN,
-    OpenAI_ORGANIZATION,
-    OpenAI_PROXY,
-    INVITATION,
-    ASSISTANT_PROMPT,
-    MODEL,
-    TIMEOUT,
-    DEFAULT_FEED_ANSWER,
-    DEFAULT_NOT_ENOUGH_BALANCE,
-    DEBUG
-)
+from config import openai_settings
 from ..models import TelegramAccount
 from ..utils.admins_send_message import func_admins_message
+# from importlib import reload
 
 
 class OpenAIManager:
     """ Класс для работы с API ChatGPT """
     __instance = None
-    __default_bad_answer = DEFAULT_FEED_ANSWER
+    __default_bad_answer = openai_settings.DEFAULT_ANSWER
 
     def __new__(cls, *args, **kwargs):
         if cls.__instance is None:
@@ -39,9 +31,9 @@ class OpenAIManager:
     def __init__(self, dbase, bot, logger):
 
         self.openai = AsyncOpenAI(
-            api_key=OpenAI_TOKEN,
-            organization=OpenAI_ORGANIZATION,
-            http_client=AsyncClient(proxy=OpenAI_PROXY)
+            api_key=openai_settings.OPENAI_API_KEY,
+            organization=openai_settings.OPENAI_ORGANIZATION,
+            http_client=AsyncClient(proxy=openai_settings.OPENAI_PROXY)
         )
         self.dbase = dbase
         self.bot = bot
@@ -55,9 +47,10 @@ class OpenAIManager:
             user_id: Union[int, str, None] = None,
             update: Union[CallbackQuery, Message, None] = None) -> Optional[str]:
         """Основной метод осуществления запросов к ChatGPT"""
+        # await sync_to_async(reload)(openai_settings)
         answer = None
         if await self._check_type_str(prompt):
-            if MODEL == 'gpt-3.5-turbo':
+            if openai_settings.OPENAI_MODEL == 'gpt-3.5-turbo':
                 answer = await self.answer_gpt_3_5_turbo(
                     prompt=prompt,
                     correct=False,
@@ -78,22 +71,24 @@ class OpenAIManager:
         text = text.strip()
         if not text.endswith('.'):
             text += '.'
-        return f'{INVITATION} {text}'
+        return f'{openai_settings.INVITATION} {text}'
 
     async def check_user_balance_requests(
             self, user_id, update: Union[CallbackQuery, Message, None] = None) -> bool:
         """Проверка доступного баланса пользователей"""
-        user = await TelegramAccount.objects.filter(tg_user_id=user_id).afirst()
+        user = await TelegramAccount.objects.filter(
+            tg_user_id=user_id or update.from_user.id).afirst()
         if user and user.balance_requests > 0:
             return True
         # if isinstance(update, CallbackQuery):
         #     ...
         # await self.bot.answer_callback_query(callback_query_id=update.id, show_alert=False,
-        #                                      text=DEFAULT_NOT_ENOUGH_BALANCE)
-        if DEBUG:
+        #                                      text=openai_settings.DEFAULT_NOT_ENOUGH_BALANCE)
+        if settings.DEBUG:
             self.logger.warning(self.sign + f"{user_id=} | {user.tg_username=} | "
                                             f"{user.balance_requests=} | "
-                                            f"answer: {DEFAULT_NOT_ENOUGH_BALANCE[:100]}...")
+                                            f"answer: {openai_settings.DEFAULT_NOT_ENOUGH_BALANCE[:100]}"
+                                            f"...")
         return False
 
     async def answer_gpt_3_5_turbo(
@@ -105,25 +100,26 @@ class OpenAIManager:
             update: Union[CallbackQuery, Message, None] = None) -> str:
         """ Запрос к ChatGPT модель: gpt-3.5-turbo"""
         if not await self.check_user_balance_requests(user_id=user_id, update=update):
-            return DEFAULT_NOT_ENOUGH_BALANCE
+            return openai_settings.DEFAULT_NOT_ENOUGH_BALANCE
 
         prompt = await self.prompt_correct(text=prompt) if correct else prompt
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.info(self.sign + f"question: {prompt[:100]}...")
 
         messages_data = list() if not isinstance(messages_data, list) else messages_data
         if not messages_data:
             # добавляет начальный prompt для настройки ИИ бота
-            messages_data.append({"role": "assistant", "content": ASSISTANT_PROMPT})
+            messages_data.append(
+                {"role": "assistant", "content": openai_settings.ASSISTANT_PROMPT})
 
         messages_data.append({"role": "user", "content": prompt})
 
         try:
             response = await asyncio.wait_for(self.openai.chat.completions.create(
-                model=MODEL,
+                model=openai_settings.OPENAI_MODEL,
                 messages=messages_data,
-                timeout=TIMEOUT
-            ), timeout=TIMEOUT + 3)
+                timeout=openai_settings.OPENAI_TIMEOUT
+            ), timeout=openai_settings.OPENAI_TIMEOUT + 3)
 
             if (response
                     and isinstance(response, ChatCompletion)
@@ -139,28 +135,29 @@ class OpenAIManager:
 
         except Exception as exception:
             await func_admins_message(exc=f'{self.sign} {exception=}')
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.warning(self.sign + f"{exception=}")
             answer = self.__default_bad_answer
 
         text = answer.replace('\n', '')
-        if DEBUG:
+        if settings.DEBUG:
             self.logger.info(self.sign + f"answer: {text[:100]}...")
         return answer
 
     async def speech_to_text(self, file) -> str:
         """Транскрибирует голосовое сообщение или звуковой файл в естественный текст"""
         result = 'transcription error'
+        # await sync_to_async(reload)(openai_settings)
         try:
             audio = open(file, 'rb')
             transcription: Transcription = await asyncio.wait_for(
                 self.openai.audio.transcriptions.create(model="whisper-1", file=audio),
-                timeout=TIMEOUT + 3
+                timeout=openai_settings.OPENAI_TIMEOUT + 3
             )
             os.remove(file)
             result = transcription.text.strip()
         except Exception as exception:
             await func_admins_message(exc=f'{self.sign} {result=} {exception=}')
-            if DEBUG:
+            if settings.DEBUG:
                 self.logger.warning(f'{self.sign} {result=} {exception=}')
         return result

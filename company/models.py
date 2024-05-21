@@ -5,8 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
-from config.models.base_model import BaseModel
-from psychological_testing.models import SevenPetals
+from core.models import BaseModel
 from .managers.calendar_events_manager import CalendarEventManager
 
 
@@ -19,15 +18,6 @@ class Company(BaseModel):
         max_length=1024, null=True, blank=True, verbose_name=_('about company'))
     about_team = models.CharField(
         max_length=1024, null=True, blank=True, verbose_name=_('about team'))
-
-    seven_petals = models.OneToOneField(
-        to=SevenPetals,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='company',
-        verbose_name=_('seven_petals'))
-
     class Meta:
         """Класс, определяющий некоторые параметры модели."""
         verbose_name = _('company')
@@ -44,35 +34,36 @@ class Company(BaseModel):
         """Динамически получает, прошедшие события календаря"""
         return self.calendar_events.filter(active_event=False).all()
 
-    def save(self, *args, **kwargs):
-        """Переопределение метода save для перерасчёта данных тестирования компании,
-        при сохранении, учитывая только тех пользователей которые прошли тестирование """
-        super().save(*args, **kwargs)
-        if not self.seven_petals:
-            self.seven_petals = SevenPetals()
-        else:
-            self.seven_petals.optimism = 0
-            self.seven_petals.stream = 0
-            self.seven_petals.sense = 0
-            self.seven_petals.love = 0
-            self.seven_petals.play = 0
-            self.seven_petals.study = 0
-            self.seven_petals.impact = 0
-            self.seven_petals.general_questions = 0
-
-        if members := [user for user in self.members.all() if user.seven_petals]:
-            eff = 1 / len(members)
-
-            for user in members:
-                self.seven_petals.optimism += (user.seven_petals.optimism * eff)
-                self.seven_petals.stream += (user.seven_petals.stream * eff)
-                self.seven_petals.sense += (user.seven_petals.sense * eff)
-                self.seven_petals.love += (user.seven_petals.love * eff)
-                self.seven_petals.play += (user.seven_petals.play * eff)
-                self.seven_petals.study += (user.seven_petals.study * eff)
-                self.seven_petals.impact += (user.seven_petals.impact * eff)
-                self.seven_petals.general_questions += (user.seven_petals.general_questions * eff)
-        self.seven_petals.save()
+    # def save(self, *args, **kwargs):
+    #     """Переопределение метода save для перерасчёта данных тестирования компании,
+    #     при сохранении, учитывая только тех пользователей которые прошли тестирование """
+    #     super().save(*args, **kwargs)
+    #     if not self.seven_petals_company:
+    #         # self.seven_petals = SevenPetals()
+    #         SevenPetals(company=self).save()
+    #     else:
+    #         self.seven_petals.optimism = 0
+    #         self.seven_petals.stream = 0
+    #         self.seven_petals.sense = 0
+    #         self.seven_petals.love = 0
+    #         self.seven_petals.play = 0
+    #         self.seven_petals.study = 0
+    #         self.seven_petals.impact = 0
+    #         self.seven_petals.general_questions = 0
+    #
+    #     if members := [user for user in self.members.all() if user.seven_petals]:
+    #         eff = 1 / len(members)
+    #
+    #         for user in members:
+    #             self.seven_petals.optimism += (user.seven_petals.optimism * eff)
+    #             self.seven_petals.stream += (user.seven_petals.stream * eff)
+    #             self.seven_petals.sense += (user.seven_petals.sense * eff)
+    #             self.seven_petals.love += (user.seven_petals.love * eff)
+    #             self.seven_petals.play += (user.seven_petals.play * eff)
+    #             self.seven_petals.study += (user.seven_petals.study * eff)
+    #             self.seven_petals.impact += (user.seven_petals.impact * eff)
+    #             self.seven_petals.general_questions += (user.seven_petals.general_questions * eff)
+    #     self.seven_petals.save()
 
     def __repr__(self):
         """Переопределение __repr__, для отображения company name в названии объекта."""
@@ -140,6 +131,12 @@ class CalendarEventReminder(BaseModel):
         related_name='reminders',
         verbose_name=_('event')
     )
+
+    class Meta:
+        """Класс, определяющий некоторые параметры модели."""
+        verbose_name = _('reminder')
+        verbose_name_plural = _('reminders')
+        ordering = ['-interval']
 
     def save(self, *args, **kwargs):
         """Переопределение метода save для сохранения напоминаний только в будущем времени"""

@@ -1,15 +1,15 @@
-import re
+import os
 import random
-from typing import Tuple, Union, Optional, Any
+import re
 import string
 from datetime import datetime
+from random import choice
+from typing import Tuple, Union, Optional, Any
 
 from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
-from loguru import logger
-from django.utils import timezone
 from django.conf import settings
-from random import choice
-from telegram_bot.config import INVITE_LINK_LIFE
+from django.utils import timezone
+from loguru import logger
 
 
 def get_fullname(search_query: str) -> Tuple:
@@ -54,6 +54,7 @@ def get_id_credit(search_query: str) -> Union[int, bool]:
     if search_query.isdigit() and len(search_query) < 10:
         result = search_query
     return result
+
 
 def get_phone_number(search_query: str) -> Union[int, bool]:
     result = False
@@ -134,7 +135,7 @@ def generate_random_string(length: int) -> str:
 def create_invite_link(bot_username: str, referrer_id: int | str) -> str:
     """Создаёт и сохраняет в кэш реферальную ссылку с временем жизни==INVITE_LINK_LIFE"""
     invite_code = generate_random_string(35)
-    settings.REDIS_CACHE.set(name=invite_code, value=referrer_id, ex=INVITE_LINK_LIFE)
+    settings.REDIS_CACHE.set(name=invite_code, value=referrer_id, ex=settings.INVITE_LINK_LIFE)
     return f"<a>https://t.me/{bot_username}?start={invite_code}&preview:true</a>"
 
 
@@ -143,3 +144,11 @@ async def create_keyboard(button: Any) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton(text=button.name, callback_data=button.class_name))
     return keyboard
+
+
+def check_or_create_directory(path: str) -> bool:
+    """Создаёт директорию если её не существует"""
+    if not (is_dir := os.path.isdir(path)):
+        os.mkdir(path)
+        return os.path.isdir(path)
+    return is_dir
