@@ -5,8 +5,8 @@ from typing import List, Tuple, Union, Optional, Dict
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, Message
-from django.conf import settings
 
+from config import openai_settings
 from core.utils.i18n import I18N
 from .base_classes import BaseButton, BaseMessage
 from .contacts_buttons import ContactManagerButton
@@ -113,9 +113,9 @@ class RegenerateAIResponse(BaseButton):
                     update=update
                 )
             else:
-                ai_answer = settings.DEFAULT_FEED_ANSWER
+                ai_answer = openai_settings.DEFAULT_AI_ANSWER
 
-            if ai_answer != settings.DEFAULT_FEED_ANSWER:
+            if ai_answer != openai_settings.DEFAULT_AI_ANSWER:
                 reply_text = reply_text + ai_answer + ':ai:some_question'
             else:
                 self.children_buttons = []
@@ -178,7 +178,8 @@ class MessageOnceForQuestionOpenAIButton(BaseMessage):
     async def _set_answer_logic(
             self, update: Message, state: FSMContext) -> Tuple[Union[str, Tuple], Optional[str]]:
         """I18N не используется из, за сложности хранения данных"""
-        reply_text = self.reply_text
+        user = update.user
+        reply_text = self.reply_text.translate(user.language)
         self.children_buttons = [
             RegenerateAIResponse(new=False),
             CreateNewTaskForQuestionOpenAI(new=False),
@@ -203,8 +204,10 @@ class MessageOnceForQuestionOpenAIButton(BaseMessage):
             else:
                 task_to_generate_ai = update.text.strip()
 
-            wait_msg = await self.bot.send_message(chat_id=user_id,
-                                                   text=self.default_generate_answer)
+            wait_msg = await self.bot.send_message(
+                chat_id=user_id,
+                text=self.default_generate_answer.translate(user.language)
+            )
 
             # возвращает сохраненный контекст
             ai_messages_data = await self.button_search_and_action_any_collections(
@@ -223,7 +226,7 @@ class MessageOnceForQuestionOpenAIButton(BaseMessage):
                 update=update
             )
 
-            if ai_answer != settings.DEFAULT_FEED_ANSWER:
+            if ai_answer != openai_settings.DEFAULT_AI_ANSWER:
                 reply_text = reply_text + ai_answer + ':ai:some_question'
 
             else:
@@ -232,7 +235,7 @@ class MessageOnceForQuestionOpenAIButton(BaseMessage):
                     user_id=user_id, action='pop', button_name='ai_messages_data',
                     updates_data=True)
                 self.children_buttons = []
-                reply_text = self.reply_text
+                reply_text = self.reply_text.translate(user.language)
 
             await self.bot.delete_message(chat_id=user_id, message_id=wait_msg.message_id)
 

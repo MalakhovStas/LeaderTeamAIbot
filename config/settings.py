@@ -331,7 +331,7 @@ LOGS_RETENTION = 1
 
 # Настройки Celery
 # Вывод логов сelery_workers в консоль
-STDOUT_STDERR_WORKERS_TO_CONTROLLER = True
+STDOUT_STDERR_WORKERS_TO_CONSOLE = True
 # Интервал запуска задачи в секундах
 TASK_INTERVAL = 60
 # максимальный уровень приоритетов

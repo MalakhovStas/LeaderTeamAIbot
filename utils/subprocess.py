@@ -76,10 +76,11 @@ def start_celery_periodic_tasks_worker_subprocess() -> None:
         "celery", "-A", "config.celery.config:app", "worker", "-B", '-l', 'info', "-Q", "default",
         "-n", "periodic_tasks_worker"
     ]
-    if not settings.STDOUT_STDERR_WORKERS_TO_CONTROLLER:
+    if not settings.STDOUT_STDERR_WORKERS_TO_CONSOLE:
         celery_worker = subprocess.Popen(
             command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     else:
+        subprocess.Popen(['pwd'])
         celery_worker = subprocess.Popen(command)
     settings.APP_CONFIG['periodic_tasks_workers'].append(celery_worker)
 

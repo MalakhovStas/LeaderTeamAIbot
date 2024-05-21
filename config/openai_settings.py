@@ -13,8 +13,7 @@ else:
     assistant_conf = None
 
 OPENAI_API_KEY = assistant_conf.openai_api_key if assistant_conf else os.getenv('OpenAI_API_KEY')
-# OpenAI_TOKEN = os.getenv('OpenAI_API_KEY')
-
+# OPENAI_API_KEY = os.getenv('OpenAI_API_KEY')
 
 OPENAI_ORGANIZATION = assistant_conf.openai_organization if assistant_conf else os.getenv(
     'OpenAI_ORGANIZATION')
@@ -110,5 +109,5 @@ ASSISTANT_RECOMMENDATIONS_PROMPT = assistant_conf.recommendations_prompt if assi
      '"Cемь лепестков" вот актуальные данные исследования:')
 
 # Ответы open_ai по умолчанию
-DEFAULT_ANSWER = 'Ошибка при формировании ответа'
+DEFAULT_AI_ANSWER = 'Ошибка при формировании ответа'
 DEFAULT_NOT_ENOUGH_BALANCE = 'Ваш лимит запросов исчерпан, пожалуйста пополните баланс'

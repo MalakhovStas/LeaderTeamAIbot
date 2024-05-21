@@ -21,7 +21,6 @@ from ..utils.admins_send_message import func_admins_message
 class OpenAIManager:
     """ Класс для работы с API ChatGPT """
     __instance = None
-    __default_bad_answer = openai_settings.DEFAULT_ANSWER
 
     def __new__(cls, *args, **kwargs):
         if cls.__instance is None:
@@ -131,13 +130,13 @@ class OpenAIManager:
                 await self.dbase.update_user_balance_requests(user_id=user_id, down_balance=1)
             else:
                 messages_data.pop(-1)
-                answer = self.__default_bad_answer
+                answer = openai_settings.DEFAULT_AI_ANSWER
 
         except Exception as exception:
             await func_admins_message(exc=f'{self.sign} {exception=}')
             if settings.DEBUG:
                 self.logger.warning(self.sign + f"{exception=}")
-            answer = self.__default_bad_answer
+            answer = openai_settings.DEFAULT_AI_ANSWER
 
         text = answer.replace('\n', '')
         if settings.DEBUG:
