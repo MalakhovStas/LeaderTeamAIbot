@@ -72,6 +72,11 @@ def application_testing() -> None:
 
 def start_celery_periodic_tasks_worker_subprocess() -> None:
     """Запуск подпроцесса celery_worker для периодических задач"""
+    # FIXME разобраться почем на сервере не запускается worker
+    # FileNotFoundError: [Errno 2] No such file or directory: 'celery'
+    # nano telegram_bot / management / commands / start_tg_bot.py
+    # journalctl -n 100 -f -u LeaderTeamAIbot-Development
+
     command = [
         "celery", "-A", "config.celery.config:app", "worker", "-B", '-l', 'info', "-Q", "default",
         "-n", "periodic_tasks_worker"

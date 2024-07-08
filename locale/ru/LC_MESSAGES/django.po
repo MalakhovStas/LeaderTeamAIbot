@@ -1,0 +1,492 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-24 11:46+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: company/admin.py:24 company/models.py:139
+msgid "reminders"
+msgstr "напоминания"
+
+#: company/admin.py:39
+msgid "calendar - active events"
+msgstr "календарь - активные события"
+
+#: company/admin.py:58
+msgid "calendar - past events"
+msgstr "календарь - прошедшие события"
+
+#: company/admin.py:92
+msgid "command"
+msgstr "команда"
+
+#: company/admin.py:107 company/admin.py:164 psychological_testing/admin.py:27
+#: psychological_testing/admin.py:28
+msgid "test seven petals"
+msgstr "тестирование семь лепестков"
+
+#: company/admin.py:120 psychological_testing/admin.py:76 users/models.py:21
+msgid "username"
+msgstr "username"
+
+#: company/admin.py:174 psychological_testing/models.py:60 users/admin.py:149
+msgid "graph"
+msgstr "график"
+
+#: company/admin.py:188 psychological_testing/admin.py:124 users/admin.py:139
+msgid "graph statistics"
+msgstr "график статистики"
+
+#: company/admin.py:197
+msgid "number of active calendar events"
+msgstr "количество активных событий календаря"
+
+#: company/admin.py:206
+msgid "number of past calendar events"
+msgstr "количество прошедших событий календаря"
+
+#: company/apps.py:8 company/models.py:24 company/models.py:88
+#: psychological_testing/models.py:27 users/models.py:55
+msgid "company"
+msgstr "компания"
+
+#: company/apps.py:9 company/models.py:25
+msgid "companies"
+msgstr "компании"
+
+#: company/models.py:14
+msgid "company name"
+msgstr "название компании"
+
+#: company/models.py:16 telegram_bot/models.py:17 users/models.py:42
+msgid "phone number"
+msgstr "номер телефона"
+
+#: company/models.py:18
+msgid "about company"
+msgstr "о компании"
+
+#: company/models.py:20
+msgid "about team"
+msgstr "о команде"
+
+#: company/models.py:83
+msgid "title"
+msgstr "название"
+
+#: company/models.py:90
+msgid "event date"
+msgstr "дата события"
+
+#: company/models.py:91
+msgid "description"
+msgstr "описание"
+
+#: company/models.py:95
+msgid "calendar event"
+msgstr "событие календаря"
+
+#: company/models.py:96
+msgid "calendar events"
+msgstr "события календаря"
+
+#: company/models.py:112
+msgid "week"
+msgstr "неделя"
+
+#: company/models.py:113
+msgid "three days"
+msgstr "три дня"
+
+#: company/models.py:114
+msgid "one day"
+msgstr "один день"
+
+#: company/models.py:115
+msgid "twelve hours"
+msgstr "двенадцать часов"
+
+#: company/models.py:116
+msgid "six hours"
+msgstr "шесть часов"
+
+#: company/models.py:117
+msgid "three hours"
+msgstr "три часа"
+
+#: company/models.py:118
+msgid "one hour"
+msgstr "один час"
+
+#: company/models.py:119
+msgid "thirty minutes"
+msgstr "тридцать минут"
+
+#: company/models.py:120
+msgid "fifteen minutes"
+msgstr "пятнадцать минут"
+
+#: company/models.py:121
+msgid "ten minutes"
+msgstr "десять минут"
+
+#: company/models.py:122
+msgid "five minutes"
+msgstr "пять минут"
+
+#: company/models.py:123
+msgid "three minutes"
+msgstr "три минуты"
+
+#: company/models.py:124
+msgid "one minute"
+msgstr "одна минута"
+
+#: company/models.py:128
+msgid "reminder date"
+msgstr "дата напоминания"
+
+#: company/models.py:133
+msgid "event"
+msgstr "событие"
+
+#: company/models.py:138
+msgid "reminder"
+msgstr "напоминание"
+
+#: config/settings.py:94
+msgid "Collection department"
+msgstr "Коллекторский отдел"
+
+#: config/settings.py:95
+msgid "Contact department"
+msgstr "Отдел контактов"
+
+#: config/settings.py:96
+msgid "Legal service"
+msgstr "Юридические услуги"
+
+#: config/settings.py:99
+msgid "Address"
+msgstr "Адрес"
+
+#: config/settings.py:99
+msgid "Moscow, st.Moskovskaya.77"
+msgstr "Москва, ул.Московская, 77"
+
+#: config/settings.py:100
+msgid "Working time"
+msgstr "Время работы"
+
+#: config/settings.py:100
+msgid "weekdays from 10:00 to 19:00"
+msgstr "рабочие дни с 10:00 до 19:00"
+
+#: config/settings.py:103
+msgid "Functionality of this block is under development"
+msgstr "Функционал данного блока находится в разработке"
+
+#: config/settings.py:265
+msgid "English"
+msgstr "Английский"
+
+#: config/settings.py:266
+msgid "Russian"
+msgstr "Русский"
+
+#: core/apps.py:8
+msgid "core"
+msgstr "ядро"
+
+#: core/models/assistant_settings_model.py:39
+msgid "invitation"
+msgstr "приглашение"
+
+#: core/models/assistant_settings_model.py:42
+msgid "base prompt"
+msgstr "базовый промпт"
+
+#: core/models/assistant_settings_model.py:45
+msgid "recommendations prompt"
+msgstr "рекомендательный промпт"
+
+#: core/models/assistant_settings_model.py:50
+msgid "assistant config"
+msgstr "конфигурация ассистента"
+
+#: core/models/base_model.py:9
+msgid "creation date"
+msgstr "дата создания"
+
+#: core/models/base_model.py:13 users/models.py:61
+msgid "updated date"
+msgstr "дата обновления"
+
+#: core/models/base_model.py:15
+msgid "active"
+msgstr "активный"
+
+#: core/models/feedbacks_model.py:17 psychological_testing/models.py:19
+#: telegram_bot/models.py:14 users/apps.py:8 users/models.py:73
+msgid "user"
+msgstr "пользователь"
+
+#: core/models/feedbacks_model.py:19 core/models/feedbacks_model.py:33
+msgid "feedback"
+msgstr "отзыв"
+
+#: core/models/feedbacks_model.py:21
+msgid "response"
+msgstr "ответ"
+
+#: core/models/feedbacks_model.py:29
+msgid "admin"
+msgstr "администратор"
+
+#: core/models/feedbacks_model.py:34
+msgid "feedbacks"
+msgstr "отзывы"
+
+#: psychological_testing/admin.py:39
+msgid "Test results"
+msgstr "Результаты тестирования"
+
+#: psychological_testing/admin.py:52
+msgid "Visual representation"
+msgstr "Визуальное представление"
+
+#: psychological_testing/admin.py:59
+msgid "Test subject"
+msgstr "Тестируемый"
+
+#: psychological_testing/admin.py:96
+msgid "subject"
+msgstr "объект"
+
+#: psychological_testing/admin.py:105
+msgid "display graph"
+msgstr "отобразить график"
+
+#: psychological_testing/apps.py:8 users/admin.py:78
+msgid "psychological testing"
+msgstr "психологическое тестирование"
+
+#: psychological_testing/apps.py:9
+msgid "psychological tests"
+msgstr "психологические тестирования"
+
+#: psychological_testing/models.py:30
+msgid "optimism"
+msgstr "оптимизм"
+
+#: psychological_testing/models.py:33
+msgid "stream"
+msgstr "поток"
+
+#: psychological_testing/models.py:36
+msgid "sense"
+msgstr "смысл"
+
+#: psychological_testing/models.py:39
+msgid "love"
+msgstr "любить"
+
+#: psychological_testing/models.py:42
+msgid "play"
+msgstr "играть"
+
+#: psychological_testing/models.py:45
+msgid "study"
+msgstr "учиться"
+
+#: psychological_testing/models.py:48
+msgid "impact"
+msgstr "влиять"
+
+#: psychological_testing/models.py:51
+msgid "general questions"
+msgstr "общие вопросы"
+
+#: psychological_testing/models.py:54
+msgid "open questions pleasure"
+msgstr "открытые вопросы удовольствие"
+
+#: psychological_testing/models.py:57
+msgid "open questions irritation"
+msgstr "открытые вопросы раздражение"
+
+#: psychological_testing/models.py:63
+msgid "AI recommendations"
+msgstr "рекомендации ассистента"
+
+#: psychological_testing/models.py:67 psychological_testing/models.py:68
+msgid "seven petals"
+msgstr "семь лепестков"
+
+#: telegram_bot/apps.py:8
+msgid "telegram bot"
+msgstr "телеграм бот"
+
+#: telegram_bot/apps.py:9
+msgid "telegram bots"
+msgstr "телеграм боты"
+
+#: telegram_bot/models.py:20
+msgid "telegram user_id"
+msgstr "телеграм user_id"
+
+#: telegram_bot/models.py:23
+msgid "telegram username"
+msgstr "телеграм username"
+
+#: telegram_bot/models.py:26
+msgid "telegram first_name"
+msgstr "телеграм first_name"
+
+#: telegram_bot/models.py:29
+msgid "telegram last_name"
+msgstr "телеграм last_name"
+
+#: telegram_bot/models.py:33
+msgid "referer_id"
+msgstr "referer_id"
+
+#: telegram_bot/models.py:37
+msgid "access"
+msgstr "доступ"
+
+#: telegram_bot/models.py:41
+msgid "start time limited"
+msgstr "время начала ограничения"
+
+#: telegram_bot/models.py:45
+msgid "position"
+msgstr "должность"
+
+#: telegram_bot/models.py:50
+msgid "password"
+msgstr "пароль"
+
+#: telegram_bot/models.py:54
+msgid "date last request"
+msgstr "дата последнего запроса"
+
+#: telegram_bot/models.py:57
+msgid "text last request"
+msgstr "текст последнего запроса"
+
+#: telegram_bot/models.py:60
+msgid "num requests"
+msgstr "количество запросов"
+
+#: telegram_bot/models.py:63
+msgid "ban from user"
+msgstr "бан от пользователя"
+
+#: telegram_bot/models.py:69
+msgid "balance requests"
+msgstr "баланс запросов"
+
+#: telegram_bot/models.py:73
+msgid "balance"
+msgstr "баланс"
+
+#: telegram_bot/models.py:74
+msgid "subscription"
+msgstr "подписка"
+
+#: telegram_bot/models.py:78 users/admin.py:23
+msgid "telegram account"
+msgstr "телеграм аккаунт"
+
+#: telegram_bot/models.py:79
+msgid "telegram accounts"
+msgstr "телеграм аккаунты"
+
+#: users/admin.py:48 users/admin.py:87
+msgid "credentials"
+msgstr "реквизиты для входа"
+
+#: users/admin.py:49
+msgid "permissions"
+msgstr "разрешения"
+
+#: users/admin.py:56
+msgid "communication with the assistant"
+msgstr "общение с ассистентом"
+
+#: users/admin.py:59
+msgid "important dates"
+msgstr "важные даты"
+
+#: users/admin.py:65
+msgid "personal information"
+msgstr "личная информация"
+
+#: users/admin.py:107 users/models.py:47
+msgid "photo"
+msgstr "фото"
+
+#: users/apps.py:9 users/models.py:74
+msgid "users"
+msgstr "пользователи"
+
+#: users/manager.py:13
+msgid "Username not specified"
+msgstr "Имя пользователя не указано"
+
+#: users/manager.py:28
+msgid "The superuser must have is_staff=True."
+msgstr "Суперпользователь должен иметь is_staff=True."
+
+#: users/manager.py:30
+msgid "The superuser must have is_superuser=True."
+msgstr "Суперпользователь должен иметь is_superuser=True."
+
+#: users/models.py:17
+msgid "personal data processing agreement"
+msgstr "соглашение на обработку персональных данных"
+
+#: users/models.py:24
+msgid "name"
+msgstr "имя"
+
+#: users/models.py:27
+msgid "surname"
+msgstr "фамилия"
+
+#: users/models.py:30
+msgid "patronymic"
+msgstr "отчество"
+
+#: users/models.py:38
+msgid "language"
+msgstr "язык"
+
+#: users/models.py:44
+msgid "email"
+msgstr "электронная почта"
+
+#: users/models.py:57
+msgid "role in company"
+msgstr "роль в компании"
+
+#: users/models.py:64
+msgid "ai dialog"
+msgstr "диалог с ИИ"

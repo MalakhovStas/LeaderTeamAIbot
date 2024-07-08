@@ -1,8 +1,9 @@
 from django.apps import AppConfig
+from django.utils.translation import gettext_lazy as _
 
 
 class TelegramBotConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'telegram_bot'
-    verbose_name = 'telegram bot'
-    verbose_name_plural = 'telegram bots'
+    verbose_name = _('telegram bot')
+    verbose_name_plural = _('telegram bots')

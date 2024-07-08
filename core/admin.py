@@ -13,6 +13,26 @@ class AssistantConfAdmin(admin.ModelAdmin):
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):
     """Регистрация модели Feedback в админке"""
+    model = Feedback
+    fields = (
+        'created_at',
+        'is_active',
+        'user',
+        'feedback',
+        'response',
+        'admin',
+    )
+    ordering = ('created_at',)
+    readonly_fields = (
+        'created_at',
+    )
+    search_fields = ('feedback', 'response')
+    # extra = 0
+    # max_num = 0
+    # can_delete = False
+    # classes = ('collapse',)
+    # verbose_name_plural = _('command')
+    # exclude = ('pk',)
     # FIXME исправить отображение admin(видит только себя), если is_active=False нельзя редактировать response
     # def get_queryset(self, request):
     #     """Возвращает набор экземпляров модели Seller в зависимости от прав пользователя"""
